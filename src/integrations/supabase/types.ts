@@ -484,10 +484,13 @@ export type Database = {
           description: string
           id: string
           investors: string[] | null
+          lead_investor: string | null
           name: string
           original_submission_id: string
           processed_at: string
+          round_type: string | null
           token: string | null
+          tweet_timestamp: string | null
           twitter_url: string | null
         }
         Insert: {
@@ -497,10 +500,13 @@ export type Database = {
           description: string
           id?: string
           investors?: string[] | null
+          lead_investor?: string | null
           name: string
           original_submission_id: string
           processed_at?: string
+          round_type?: string | null
           token?: string | null
+          tweet_timestamp?: string | null
           twitter_url?: string | null
         }
         Update: {
@@ -510,10 +516,13 @@ export type Database = {
           description?: string
           id?: string
           investors?: string[] | null
+          lead_investor?: string | null
           name?: string
           original_submission_id?: string
           processed_at?: string
+          round_type?: string | null
           token?: string | null
+          tweet_timestamp?: string | null
           twitter_url?: string | null
         }
         Relationships: []

@@ -8,7 +8,7 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
     const { data, error } = await supabase
       .from('processed_fundraises')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('tweet_timestamp', { ascending: false });
     
     if (error) {
       console.error("Database error:", error);
@@ -20,7 +20,7 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       id: item.id,
       tweet_url: item.twitter_url,
       status: 'approved',
-      created_at: item.created_at,
+      created_at: item.tweet_timestamp || item.created_at,
       tweet_data: {
         text: item.description,
         author_username: item.announcement_username,
@@ -29,15 +29,19 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       tweetId: item.original_submission_id,
       username: item.announcement_username,
       content: item.description,
-      curatorNotes: `Raised: ${item.amount_raised ? `$${item.amount_raised.toLocaleString()}` : 'Undisclosed'}\n${
+      curatorNotes: `${item.round_type ? `Round: ${item.round_type}\n` : ''}${
+        item.amount_raised ? `Raised: $${item.amount_raised.toLocaleString()}` : 'Amount: Undisclosed'
+      }\n${
+        item.lead_investor ? `Lead: ${item.lead_investor}\n` : ''
+      }${
         item.investors?.length ? `Investors: ${item.investors.join(', ')}` : ''
       }${item.token ? `\nToken: ${item.token}` : ''}`,
-      // Add missing required fields
-      userId: "system", // Since this is system-processed
+      // Required fields for CuratedSubmission type
+      userId: "system",
       curatorId: "system",
       curatorUsername: "CryptoFundraises",
       curatorTweetId: item.original_submission_id,
-      submittedAt: item.created_at,
+      submittedAt: item.tweet_timestamp || item.created_at,
       moderationHistory: [{
         tweetId: item.original_submission_id,
         feedId: "cryptofundraises",

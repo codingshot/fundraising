@@ -60,7 +60,13 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'Extract fundraising details from the tweet. Return a JSON object with: amount_raised (number), investors (array of strings), description (string), and token (string if mentioned).'
+              content: `Extract fundraising details from the tweet. Return a JSON object with:
+              - amount_raised (number or null): The fundraising amount in USD
+              - investors (array of strings): List of investors
+              - description (string): A clean description of the fundraising
+              - token (string or null): Token symbol if mentioned
+              - lead_investor (string or null): The lead investor if specified
+              - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
             },
             {
               role: 'user',
@@ -73,6 +79,9 @@ serve(async (req) => {
       const aiData = await aiResponse.json();
       const extractedInfo = JSON.parse(aiData.choices[0].message.content);
 
+      // Get tweet timestamp from Twitter URL or submission date
+      const tweetDate = new Date(submission.submittedAt);
+
       // Insert into database
       const { error: insertError } = await supabase
         .from('processed_fundraises')
@@ -83,8 +92,11 @@ serve(async (req) => {
           amount_raised: extractedInfo.amount_raised,
           investors: extractedInfo.investors,
           token: extractedInfo.token,
+          lead_investor: extractedInfo.lead_investor,
+          round_type: extractedInfo.round_type,
           twitter_url: `https://twitter.com/${submission.username}/status/${submission.tweetId}`,
           announcement_username: submission.username,
+          tweet_timestamp: tweetDate.toISOString(),
         });
 
       if (insertError) {
