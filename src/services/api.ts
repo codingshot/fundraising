@@ -1,24 +1,17 @@
 
 import { CuratedSubmission } from "../types/project";
+import { supabase } from "@/integrations/supabase/client";
 
 export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
   try {
     console.log("Starting to fetch submissions from API");
-    const response = await fetch(
-      'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approve',
-      {
-        mode: 'no-cors',
-        headers: {
-          'Accept': 'application/json',
-        }
-      }
-    );
+    const { data, error } = await supabase.functions.invoke('fetch-submissions');
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (error) {
+      console.error("Function error:", error);
+      throw error;
     }
     
-    const data = await response.json();
     console.log("API Response:", data);
     return data;
   } catch (error) {

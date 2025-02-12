@@ -1,1 +1,4 @@
+
 project_id = "zryhlwfkovkxtqiwzhai"
+[functions.fetch-submissions]
+verify_jwt = false
