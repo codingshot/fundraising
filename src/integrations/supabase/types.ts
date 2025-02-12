@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      crypto_fundraising: {
+        Row: {
+          categories: string[] | null
+          created_at: string
+          description: string
+          funding: Json | null
+          id: string
+          logo: string | null
+          name: string
+          token: string | null
+          tweet_url: string | null
+          twitter: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string
+          description: string
+          funding?: Json | null
+          id?: string
+          logo?: string | null
+          name: string
+          token?: string | null
+          tweet_url?: string | null
+          twitter?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string
+          description?: string
+          funding?: Json | null
+          id?: string
+          logo?: string | null
+          name?: string
+          token?: string | null
+          tweet_url?: string | null
+          twitter?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string
