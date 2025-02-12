@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     console.log("Edge function: Starting to fetch submissions");
     const response = await fetch(
-      'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approve',
+      'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approved',
       {
         headers: {
           'Accept': 'application/json',
@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("Edge function: Successfully fetched data");
+    console.log("Edge function: Successfully fetched data", data);
     
     // Transform the data to match the frontend expectations
     const transformedData = data.map((item: any) => ({
