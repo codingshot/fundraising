@@ -4,7 +4,15 @@ import { CuratedSubmission } from "../types/project";
 export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
   try {
     console.log("Starting to fetch submissions from API");
-    const response = await fetch('https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approve');
+    const response = await fetch(
+      'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approve',
+      {
+        mode: 'no-cors',
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
+    );
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
