@@ -1,7 +1,7 @@
 
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Twitter, InfoIcon } from "lucide-react";
+import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect } from "react";
 
@@ -22,30 +22,82 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
     };
   }, []);
 
-  const renderFundraiseInfo = () => (
-    <div className="space-y-2 text-sm">
-      {submission.amount_raised && (
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">Amount Raised:</span>
-          <span>${submission.amount_raised.toLocaleString()}</span>
+  const renderCompactInfo = () => (
+    <div className="grid grid-cols-5 gap-4 w-full text-sm">
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Amount</p>
+        <div className="flex items-center gap-1">
+          <DollarSign className="w-4 h-4 text-muted-foreground" />
+          <span>{submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : '-'}</span>
         </div>
-      )}
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Company</p>
+        <div className="flex items-center gap-1">
+          <Building2 className="w-4 h-4 text-muted-foreground" />
+          <span>{submission.tweet_data?.author_name || '-'}</span>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Round</p>
+        <div className="flex items-center gap-1">
+          <Briefcase className="w-4 h-4 text-muted-foreground" />
+          <span>{submission.round_type || '-'}</span>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Lead</p>
+        <div className="flex items-center gap-1">
+          <Users className="w-4 h-4 text-muted-foreground" />
+          <span className="truncate">{submission.lead_investor || '-'}</span>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Other Investors</p>
+        <div className="flex items-center gap-1">
+          <Users className="w-4 h-4 text-muted-foreground" />
+          <span className="truncate">
+            {submission.investors && submission.investors.length > 0 
+              ? submission.investors.filter(inv => inv !== submission.lead_investor).join(', ') 
+              : '-'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDetailedInfo = () => (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <DollarSign className="w-4 h-4 text-muted-foreground" />
+        <span className="font-semibold">Amount Raised:</span>
+        <span>{submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : 'Undisclosed'}</span>
+      </div>
       {submission.round_type && (
         <div className="flex items-center gap-2">
+          <Briefcase className="w-4 h-4 text-muted-foreground" />
           <span className="font-semibold">Round:</span>
           <span>{submission.round_type}</span>
         </div>
       )}
       {submission.lead_investor && (
         <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-muted-foreground" />
           <span className="font-semibold">Lead:</span>
           <span>{submission.lead_investor}</span>
         </div>
       )}
       {submission.investors && submission.investors.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">Investors:</span>
-          <span>{submission.investors.join(", ")}</span>
+        <div className="flex items-start gap-2">
+          <Users className="w-4 h-4 mt-1 text-muted-foreground" />
+          <div>
+            <span className="font-semibold">Other Investors:</span>
+            <p className="mt-1">
+              {submission.investors
+                .filter(inv => inv !== submission.lead_investor)
+                .join(', ')}
+            </p>
+          </div>
         </div>
       )}
       {submission.token && (
@@ -59,39 +111,38 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
 
   if (viewMode === 'row') {
     return (
-      <div className="flex items-center gap-4 p-4 bg-card hover:bg-accent/50 transition-colors rounded-lg border">
-        <div className="flex-shrink-0">
-          {submission.tweet_data?.author_profile_image_url ? (
-            <img
-              src={submission.tweet_data.author_profile_image_url}
-              alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <Twitter className="w-6 h-6" />
-            </div>
-          )}
-        </div>
-        <div className="flex-grow space-y-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">
-              {submission.tweet_data?.author_name || 'Unknown Author'}
-            </h3>
-            {submission.tweet_data?.author_username && (
-              <span className="text-sm text-muted-foreground">
-                @{submission.tweet_data.author_username}
-              </span>
+      <div className="p-4 bg-card hover:bg-accent/50 transition-colors rounded-lg border">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-shrink-0">
+            {submission.tweet_data?.author_profile_image_url ? (
+              <img
+                src={submission.tweet_data.author_profile_image_url}
+                alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Twitter className="w-6 h-6" />
+              </div>
             )}
           </div>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {submission.tweet_data?.text}
-          </p>
-          {renderFundraiseInfo()}
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">
+                {submission.tweet_data?.author_name || 'Unknown Author'}
+              </h3>
+              {submission.tweet_data?.author_username && (
+                <span className="text-sm text-muted-foreground">
+                  @{submission.tweet_data.author_username}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {formatDistanceToNow(new Date(submission.created_at), { addSuffix: true })}
+            </p>
+          </div>
         </div>
-        <div className="flex-shrink-0 text-xs text-muted-foreground">
-          {formatDistanceToNow(new Date(submission.created_at), { addSuffix: true })}
-        </div>
+        {renderCompactInfo()}
       </div>
     );
   }
@@ -128,7 +179,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
             <p className="text-sm text-muted-foreground">{submission.curator_notes}</p>
           </div>
         )}
-        <div className="mb-4">{renderFundraiseInfo()}</div>
+        <div className="mb-4">{renderDetailedInfo()}</div>
         <div className="mt-4">
           <blockquote className="twitter-tweet" data-theme="light">
             <a href={submission.tweet_url}>Loading tweet...</a>
