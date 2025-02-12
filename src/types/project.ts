@@ -1,19 +1,4 @@
 
-export interface Investor {
-  name: string;
-  logo?: string;
-  website?: string;
-  twitter?: string;
-}
-
-export interface FundingRound {
-  date: string;
-  investors: Investor[];
-  round_type: string;
-  raised_amount: number;
-  valuation?: number;
-}
-
 export interface Project {
   id: string;
   name: string;
@@ -23,5 +8,10 @@ export interface Project {
   categories: string[];
   website?: string;
   twitter?: string;
-  funding?: FundingRound;
+  funding?: {
+    date: string;
+    round_type: string;
+    raised_amount: number;
+  };
+  tweet_url?: string;
 }

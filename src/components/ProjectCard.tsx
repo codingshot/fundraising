@@ -3,12 +3,25 @@ import { Project } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ExternalLink, Twitter } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useEffect } from "react";
 
 interface ProjectCardProps {
   project: Project;
 }
 
 export const ProjectCard = ({ project }: ProjectCardProps) => {
+  useEffect(() => {
+    // Load Twitter widget script
+    const script = document.createElement("script");
+    script.src = "https://platform.twitter.com/widgets.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center gap-4 p-4">
@@ -78,11 +91,18 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
                 ${(project.funding.raised_amount / 1_000_000).toFixed(1)}M
               </span>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground mb-4">
               {formatDistanceToNow(new Date(project.funding.date), {
                 addSuffix: true,
               })}
             </div>
+          </div>
+        )}
+        {project.tweet_url && (
+          <div className="mt-4">
+            <blockquote className="twitter-tweet" data-theme="light">
+              <a href={project.tweet_url}>Loading tweet...</a>
+            </blockquote>
           </div>
         )}
       </CardContent>
