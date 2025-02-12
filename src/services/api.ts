@@ -16,47 +16,56 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       throw error;
     }
     
+    if (!data || data.length === 0) {
+      console.log("No data found in the database");
+      return [];
+    }
+    
     console.log("Raw data from database:", data);
     
     // Transform to match CuratedSubmission type
-    const transformedData = data.map(item => ({
-      id: item.id,
-      tweet_url: item.twitter_url,
-      status: 'approved',
-      created_at: item.tweet_timestamp || item.created_at,
-      tweet_data: {
-        text: item.description,
-        author_username: item.announcement_username,
-        author_name: item.announcement_username,
-      },
-      tweetId: item.original_submission_id,
-      username: item.announcement_username,
-      content: item.description,
-      curatorNotes: `${item.round_type ? `Round: ${item.round_type}\n` : ''}${
-        item.amount_raised ? `Raised: $${item.amount_raised.toLocaleString()}` : 'Amount: Undisclosed'
-      }\n${
-        item.lead_investor ? `Lead: ${item.lead_investor}\n` : ''
-      }${
-        item.investors?.length ? `Investors: ${item.investors.join(', ')}` : ''
-      }${item.token ? `\nToken: ${item.token}` : ''}`,
-      userId: "system",
-      curatorId: "system",
-      curatorUsername: "CryptoFundraises",
-      curatorTweetId: item.original_submission_id,
-      submittedAt: item.tweet_timestamp || item.created_at,
-      moderationHistory: [{
+    const transformedData = data.map(item => {
+      console.log("Processing item:", item);
+      return {
+        id: item.id,
+        tweet_url: item.twitter_url,
+        status: 'approved',
+        created_at: item.tweet_timestamp || item.created_at,
+        tweet_data: {
+          text: item.description,
+          author_username: item.announcement_username,
+          author_name: item.announcement_username,
+        },
         tweetId: item.original_submission_id,
-        feedId: "cryptofundraises",
-        adminId: "system",
-        action: "approve",
-        note: null,
-        timestamp: item.processed_at,
+        username: item.announcement_username,
+        content: item.description,
+        curatorNotes: `${item.round_type ? `Round: ${item.round_type}\n` : ''}${
+          item.amount_raised ? `Raised: $${item.amount_raised.toLocaleString()}` : 'Amount: Undisclosed'
+        }\n${
+          item.lead_investor ? `Lead: ${item.lead_investor}\n` : ''
+        }${
+          item.investors?.length ? `Investors: ${item.investors.join(', ')}` : ''
+        }${item.token ? `\nToken: ${item.token}` : ''}`,
+        userId: "system",
+        curatorId: "system",
+        curatorUsername: "CryptoFundraises",
+        curatorTweetId: item.original_submission_id,
+        submittedAt: item.tweet_timestamp || item.created_at,
+        moderationHistory: [{
+          tweetId: item.original_submission_id,
+          feedId: "cryptofundraises",
+          adminId: "system",
+          action: "approve",
+          note: null,
+          timestamp: item.processed_at,
+          moderationResponseTweetId: item.original_submission_id
+        }],
         moderationResponseTweetId: item.original_submission_id
-      }],
-      moderationResponseTweetId: item.original_submission_id
-    }));
+      };
+    });
     
-    console.log("Transformed data:", transformedData);
+    console.log("Transformed data length:", transformedData.length);
+    console.log("First transformed item:", transformedData[0]);
     return transformedData;
   } catch (error) {
     console.error("Error fetching submissions:", error);
