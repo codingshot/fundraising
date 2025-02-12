@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchCuratedSubmissions } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
@@ -6,7 +7,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -90,7 +91,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background p-6">
         <Alert variant="destructive">
-          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             Failed to load fundraising announcements. Please try again later.
