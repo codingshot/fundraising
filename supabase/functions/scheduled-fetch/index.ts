@@ -19,6 +19,14 @@ serve(async (req) => {
 
   try {
     console.log("Starting scheduled fetch of submissions");
+    
+    // Initialize Supabase client
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch submissions from the API
     const response = await fetch(
       'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approved',
       {
@@ -33,85 +41,126 @@ serve(async (req) => {
     }
 
     const submissions = await response.json();
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-    
+    console.log(`Fetched ${submissions.length} submissions from API`);
+
+    let processedCount = 0;
+    let errorCount = 0;
+
     for (const submission of submissions) {
-      // Check if we've already processed this submission
-      const { data: existing } = await supabase
-        .from('processed_fundraises')
-        .select('id')
-        .eq('original_submission_id', submission.tweetId)
-        .single();
+      try {
+        console.log(`Processing submission ID: ${submission.tweetId}`);
 
-      if (existing) {
-        console.log(`Submission ${submission.tweetId} already processed, skipping`);
-        continue;
-      }
+        // Check if already processed
+        const { data: existing } = await supabase
+          .from('processed_fundraises')
+          .select('id')
+          .eq('original_submission_id', submission.tweetId)
+          .maybeSingle();
 
-      // Process with OpenAI
-      const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: `Extract fundraising details from the tweet. Return a JSON object with:
-              - amount_raised (number or null): The fundraising amount in USD
-              - investors (array of strings): List of investors
-              - description (string): A clean description of the fundraising
-              - token (string or null): Token symbol if mentioned
-              - lead_investor (string or null): The lead investor if specified
-              - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
-            },
-            {
-              role: 'user',
-              content: submission.content + (submission.curatorNotes ? `\nCurator Notes: ${submission.curatorNotes}` : '')
-            }
-          ],
-        }),
-      });
+        if (existing) {
+          console.log(`Submission ${submission.tweetId} already exists, skipping`);
+          continue;
+        }
 
-      const aiData = await aiResponse.json();
-      const extractedInfo = JSON.parse(aiData.choices[0].message.content);
+        // Process with OpenAI
+        if (!openAIApiKey) {
+          throw new Error('OpenAI API key is not configured');
+        }
 
-      // Get tweet timestamp from Twitter URL or submission date
-      const tweetDate = new Date(submission.submittedAt);
-
-      // Insert into database
-      const { error: insertError } = await supabase
-        .from('processed_fundraises')
-        .insert({
-          original_submission_id: submission.tweetId,
-          name: submission.username,
-          description: extractedInfo.description,
-          amount_raised: extractedInfo.amount_raised,
-          investors: extractedInfo.investors,
-          token: extractedInfo.token,
-          lead_investor: extractedInfo.lead_investor,
-          round_type: extractedInfo.round_type,
-          twitter_url: `https://twitter.com/${submission.username}/status/${submission.tweetId}`,
-          announcement_username: submission.username,
-          tweet_timestamp: tweetDate.toISOString(),
+        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: `Extract fundraising details from the tweet. Return a JSON object with:
+                - amount_raised (number or null): The fundraising amount in USD (convert to number, remove any $ or other currency symbols)
+                - investors (array of strings): List of investors, empty array if none mentioned
+                - description (string): A clean description of the fundraising
+                - token (string or null): Token symbol if mentioned
+                - lead_investor (string or null): The lead investor if specified
+                - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
+              },
+              {
+                role: 'user',
+                content: `${submission.content}\n${submission.curatorNotes || ''}`
+              }
+            ],
+          }),
         });
 
-      if (insertError) {
-        console.error('Error inserting processed fundraise:', insertError);
+        if (!aiResponse.ok) {
+          throw new Error(`OpenAI API error: ${aiResponse.status}`);
+        }
+
+        const aiData = await aiResponse.json();
+        console.log('OpenAI response received:', aiData);
+
+        if (!aiData.choices?.[0]?.message?.content) {
+          throw new Error('Invalid OpenAI response format');
+        }
+
+        const extractedInfo = JSON.parse(aiData.choices[0].message.content);
+        console.log('Extracted info:', extractedInfo);
+
+        // Insert into database
+        const { error: insertError } = await supabase
+          .from('processed_fundraises')
+          .insert({
+            original_submission_id: submission.tweetId,
+            name: submission.username,
+            description: extractedInfo.description,
+            amount_raised: extractedInfo.amount_raised,
+            investors: extractedInfo.investors || [],
+            token: extractedInfo.token,
+            lead_investor: extractedInfo.lead_investor,
+            round_type: extractedInfo.round_type,
+            twitter_url: `https://twitter.com/${submission.username}/status/${submission.tweetId}`,
+            announcement_username: submission.username,
+            tweet_timestamp: new Date(submission.submittedAt).toISOString(),
+            processed_at: new Date().toISOString()
+          });
+
+        if (insertError) {
+          throw new Error(`Database insert error: ${insertError.message}`);
+        }
+
+        processedCount++;
+        console.log(`Successfully processed submission ${submission.tweetId}`);
+
+      } catch (error) {
+        errorCount++;
+        console.error(`Error processing submission ${submission.tweetId}:`, error);
       }
     }
 
-    return new Response(JSON.stringify({ status: 'success' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ 
+        status: 'success', 
+        processed: processedCount, 
+        errors: errorCount 
+      }), 
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+
   } catch (error) {
-    console.error('Error in scheduled fetch:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Fatal error in scheduled fetch:', error);
+    return new Response(
+      JSON.stringify({ 
+        status: 'error', 
+        message: error.message 
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });
