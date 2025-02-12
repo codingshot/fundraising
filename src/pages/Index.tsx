@@ -37,9 +37,17 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-3xl font-semibold">Curated Crypto Tweets</h1>
+          <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
           <p className="mt-2 text-muted-foreground">
-            A curated collection of the most interesting cryptocurrency tweets
+            A feed of all the latest crypto fundraising announcements.{" "}
+            <a
+              href="https://t.me/cryptofundraises"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Telegram feed
+            </a>
           </p>
         </div>
       </header>
