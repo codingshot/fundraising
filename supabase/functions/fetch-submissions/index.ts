@@ -30,7 +30,20 @@ serve(async (req) => {
     const data = await response.json();
     console.log("Edge function: Successfully fetched data");
     
-    return new Response(JSON.stringify(data), {
+    // Transform the data to match the frontend expectations
+    const transformedData = data.map((item: any) => ({
+      ...item,
+      tweet_url: `https://twitter.com/${item.username}/status/${item.tweetId}`,
+      tweet_data: {
+        text: item.content,
+        author_username: item.username,
+        author_name: item.username, // Using username as name since we don't have the actual name
+      },
+      curator_notes: item.curatorNotes,
+      created_at: item.createdAt
+    }));
+    
+    return new Response(JSON.stringify(transformedData), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
