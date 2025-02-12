@@ -7,9 +7,10 @@ const API_BASE_URL = "https://curatedotfun-floral-sun-1539.fly.dev/api";
 
 export async function fetchProjects(): Promise<Project[]> {
   try {
-    const response = await fetch(
-      `${CORS_PROXY}/${API_BASE_URL}/submissions/cryptofundraise?status=approved`
-    );
+    // Encode the API URL before passing it to the CORS proxy
+    const apiUrl = encodeURIComponent(`${API_BASE_URL}/submissions/cryptofundraise?status=approved`);
+    const response = await fetch(`${CORS_PROXY}/${apiUrl}`);
+    
     if (!response.ok) {
       throw new Error("Failed to fetch projects");
     }
