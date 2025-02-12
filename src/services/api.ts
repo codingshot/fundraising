@@ -32,6 +32,22 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       curatorNotes: `Raised: ${item.amount_raised ? `$${item.amount_raised.toLocaleString()}` : 'Undisclosed'}\n${
         item.investors?.length ? `Investors: ${item.investors.join(', ')}` : ''
       }${item.token ? `\nToken: ${item.token}` : ''}`,
+      // Add missing required fields
+      userId: "system", // Since this is system-processed
+      curatorId: "system",
+      curatorUsername: "CryptoFundraises",
+      curatorTweetId: item.original_submission_id,
+      submittedAt: item.created_at,
+      moderationHistory: [{
+        tweetId: item.original_submission_id,
+        feedId: "cryptofundraises",
+        adminId: "system",
+        action: "approve",
+        note: null,
+        timestamp: item.processed_at,
+        moderationResponseTweetId: item.original_submission_id
+      }],
+      moderationResponseTweetId: item.original_submission_id
     }));
     
     console.log("Transformed data:", transformedData);
