@@ -8,12 +8,15 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
     const { data, error } = await supabase
       .from('processed_fundraises')
       .select('*')
-      .order('tweet_timestamp', { ascending: false });
+      .order('tweet_timestamp', { ascending: false })
+      .limit(100); // Limit to most recent 100 entries
     
     if (error) {
       console.error("Database error:", error);
       throw error;
     }
+    
+    console.log("Raw data from database:", data);
     
     // Transform to match CuratedSubmission type
     const transformedData = data.map(item => ({
@@ -36,7 +39,6 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       }${
         item.investors?.length ? `Investors: ${item.investors.join(', ')}` : ''
       }${item.token ? `\nToken: ${item.token}` : ''}`,
-      // Required fields for CuratedSubmission type
       userId: "system",
       curatorId: "system",
       curatorUsername: "CryptoFundraises",
