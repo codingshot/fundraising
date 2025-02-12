@@ -28,6 +28,11 @@ const Index = () => {
     },
   });
 
+  // Add debug logging
+  console.log("Projects from query:", projects);
+  console.log("Loading state:", isLoading);
+  console.log("Error state:", error);
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
