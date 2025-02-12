@@ -1,23 +1,14 @@
 
-export interface Project {
+export interface CuratedSubmission {
   id: string;
-  name: string;
-  token?: string;
-  logo?: string;
-  description: string;
-  categories: string[];
-  website?: string;
-  twitter?: string;
-  funding?: {
-    date: string;
-    round_type: string;
-    raised_amount: number;
+  tweet_url: string;
+  curator_notes?: string;
+  status: string;
+  created_at: string;
+  tweet_data?: {
+    text: string;
+    author_username?: string;
+    author_name?: string;
+    author_profile_image_url?: string;
   };
-  tweet_url?: string;
-}
-
-interface FundingData {
-  date: string;
-  round_type: string;
-  raised_amount: number;
 }

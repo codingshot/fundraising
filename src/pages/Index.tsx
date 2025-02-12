@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchProjects } from "@/services/api";
+import { fetchCuratedSubmissions } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
 import { FilterBar } from "@/components/FilterBar";
 import { useState } from "react";
@@ -11,25 +11,25 @@ const Index = () => {
   const [timeFilter, setTimeFilter] = useState("all");
 
   const {
-    data: projects,
+    data: submissions,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["projects"],
-    queryFn: fetchProjects,
+    queryKey: ["curated-submissions"],
+    queryFn: fetchCuratedSubmissions,
     meta: {
       onError: () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to fetch projects. Please try again later.",
+          description: "Failed to fetch submissions. Please try again later.",
         });
       },
     },
   });
 
   // Add debug logging
-  console.log("Projects from query:", projects);
+  console.log("Submissions from query:", submissions);
   console.log("Loading state:", isLoading);
   console.log("Error state:", error);
 
@@ -37,9 +37,9 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-3xl font-semibold">Crypto Fundraising Insights</h1>
+          <h1 className="text-3xl font-semibold">Curated Crypto Tweets</h1>
           <p className="mt-2 text-muted-foreground">
-            Track and analyze the latest cryptocurrency fundraising rounds
+            A curated collection of the most interesting cryptocurrency tweets
           </p>
         </div>
       </header>
@@ -47,7 +47,7 @@ const Index = () => {
       <main className="container py-6">
         <FilterBar timeFilter={timeFilter} onTimeFilterChange={setTimeFilter} />
         <ProjectGrid
-          projects={projects || []}
+          submissions={submissions || []}
           isLoading={isLoading}
           timeFilter={timeFilter}
         />

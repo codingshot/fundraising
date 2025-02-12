@@ -1,16 +1,16 @@
 
-import { Project } from "@/types/project";
+import { CuratedSubmission } from "@/types/project";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectSkeleton } from "./ProjectSkeleton";
 
 interface ProjectGridProps {
-  projects: Project[];
+  submissions: CuratedSubmission[];
   isLoading: boolean;
   timeFilter: string;
 }
 
 export const ProjectGrid = ({
-  projects,
+  submissions,
   isLoading,
   timeFilter,
 }: ProjectGridProps) => {
@@ -24,11 +24,10 @@ export const ProjectGrid = ({
     );
   }
 
-  const filteredProjects = projects.filter((project) => {
+  const filteredSubmissions = submissions.filter((submission) => {
     if (timeFilter === "all") return true;
-    if (!project.funding?.date) return false;
-
-    const date = new Date(project.funding.date);
+    
+    const date = new Date(submission.created_at);
     const now = new Date();
     const diffDays = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
@@ -48,8 +47,8 @@ export const ProjectGrid = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-      {filteredProjects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
+      {filteredSubmissions.map((submission) => (
+        <ProjectCard key={submission.id} submission={submission} />
       ))}
     </div>
   );
