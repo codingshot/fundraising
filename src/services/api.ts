@@ -20,14 +20,10 @@ export async function fetchProjects(): Promise<Project[]> {
       token: item.token,
       logo: item.logo,
       description: item.description,
-      categories: item.categories,
+      categories: item.categories || [],
       website: item.website,
       twitter: item.twitter,
-      funding: item.funding ? {
-        date: item.funding.date,
-        round_type: item.funding.round_type,
-        raised_amount: item.funding.raised_amount,
-      } : undefined,
+      funding: item.funding as { date: string; round_type: string; raised_amount: number } | null || undefined,
       tweet_url: item.tweet_url,
     }));
   } catch (error) {

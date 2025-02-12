@@ -15,3 +15,9 @@ export interface Project {
   };
   tweet_url?: string;
 }
+
+interface FundingData {
+  date: string;
+  round_type: string;
+  raised_amount: number;
+}
