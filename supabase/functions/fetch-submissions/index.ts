@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,13 +20,11 @@ serve(async (req) => {
   try {
     console.log("Starting manual fetch and import");
     
-    // Initialize Supabase client
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase configuration');
     }
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch all submissions from the API
     const response = await fetch(
       'https://curatedotfun-floral-sun-1539.fly.dev/api/submissions/cryptofundraise?status=approved',
       {
@@ -42,6 +41,9 @@ serve(async (req) => {
     const submissions = await response.json();
     console.log(`Fetched ${submissions.length} submissions`);
 
+    let processedCount = 0;
+    let errorCount = 0;
+
     for (const submission of submissions) {
       try {
         // Skip if already exists
@@ -56,52 +58,65 @@ serve(async (req) => {
           continue;
         }
 
-        // Process with OpenAI
-        const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4',
-            messages: [
-              {
-                role: 'system',
-                content: `Extract fundraising details from the tweet. Return a JSON object with:
-                - amount_raised (number or null): The fundraising amount in USD (convert to number, remove any $ or other currency symbols)
-                - investors (array of strings): List of investors, empty array if none mentioned
-                - description (string): A clean description of the fundraising
-                - token (string or null): Token symbol if mentioned
-                - lead_investor (string or null): The lead investor if specified
-                - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
-              },
-              {
-                role: 'user',
-                content: `${submission.content}\n${submission.curatorNotes || ''}`
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 500,
-          }),
-        });
+        let extractedInfo = {
+          amount_raised: null,
+          investors: [],
+          description: submission.content,
+          token: null,
+          lead_investor: null,
+          round_type: null
+        };
 
-        if (!aiResponse.ok) {
-          console.error(`OpenAI API error for ${submission.tweetId}:`, await aiResponse.text());
-          continue;
+        // Try OpenAI processing, but continue even if it fails
+        try {
+          if (openAIApiKey) {
+            const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${openAIApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                  {
+                    role: 'system',
+                    content: `Extract fundraising details from the tweet. Return a JSON object with:
+                    - amount_raised (number or null): The fundraising amount in USD (convert to number, remove any $ or other currency symbols)
+                    - investors (array of strings): List of investors, empty array if none mentioned
+                    - description (string): A clean description of the fundraising
+                    - token (string or null): Token symbol if mentioned
+                    - lead_investor (string or null): The lead investor if specified
+                    - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
+                  },
+                  {
+                    role: 'user',
+                    content: `${submission.content}\n${submission.curatorNotes || ''}`
+                  }
+                ],
+                temperature: 0.3,
+                max_tokens: 500,
+              }),
+            });
+
+            if (aiResponse.ok) {
+              const aiData = await aiResponse.json();
+              extractedInfo = JSON.parse(aiData.choices[0].message.content);
+            } else {
+              console.log(`OpenAI processing failed for ${submission.tweetId}, continuing with raw data`);
+            }
+          }
+        } catch (aiError) {
+          console.error(`OpenAI processing error for ${submission.tweetId}:`, aiError);
+          // Continue with raw data
         }
 
-        const aiData = await aiResponse.json();
-        console.log(`OpenAI processed ${submission.tweetId}:`, aiData);
-
-        const extractedInfo = JSON.parse(aiData.choices[0].message.content);
-        
         // Clean amount_raised
         let amount_raised = null;
         if (extractedInfo.amount_raised) {
           const cleanedAmount = String(extractedInfo.amount_raised)
             .replace(/[^0-9.]/g, '')
-            .replace(/\.(?=.*\.)/g, ''); // Remove all but last decimal point
+            .replace(/\.(?=.*\.)/g, '');
           const numericAmount = parseFloat(cleanedAmount);
           amount_raised = !isNaN(numericAmount) ? numericAmount : null;
         }
@@ -126,9 +141,11 @@ serve(async (req) => {
 
         if (insertError) {
           console.error(`Insert error for ${submission.tweetId}:`, insertError);
+          errorCount++;
           continue;
         }
 
+        processedCount++;
         console.log(`Successfully imported ${submission.tweetId}`);
         
         // Add a small delay to avoid rate limits
@@ -136,13 +153,14 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error processing submission ${submission.tweetId}:`, error);
+        errorCount++;
       }
     }
 
     return new Response(
       JSON.stringify({ 
         status: 'success',
-        message: `Processed ${submissions.length} submissions`
+        message: `Processed ${processedCount} submissions with ${errorCount} errors`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
