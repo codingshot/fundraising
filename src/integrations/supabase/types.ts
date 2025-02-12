@@ -12,6 +12,9 @@ export type Database = {
       crypto_fundraising: {
         Row: {
           ai_generated_summary: string | null
+          ai_processed: boolean | null
+          amount_normalized: number | null
+          amount_raw: string | null
           announcement_username: string | null
           associated_tweet_id: string | null
           categories: string[] | null
@@ -19,8 +22,12 @@ export type Database = {
           description: string
           funding: Json | null
           id: string
+          investors: string[] | null
+          lead_investor: string | null
           logo: string | null
           name: string
+          processed_at: string | null
+          round_type: string | null
           token: string | null
           tweet_url: string | null
           twitter: string | null
@@ -29,6 +36,9 @@ export type Database = {
         }
         Insert: {
           ai_generated_summary?: string | null
+          ai_processed?: boolean | null
+          amount_normalized?: number | null
+          amount_raw?: string | null
           announcement_username?: string | null
           associated_tweet_id?: string | null
           categories?: string[] | null
@@ -36,8 +46,12 @@ export type Database = {
           description: string
           funding?: Json | null
           id?: string
+          investors?: string[] | null
+          lead_investor?: string | null
           logo?: string | null
           name: string
+          processed_at?: string | null
+          round_type?: string | null
           token?: string | null
           tweet_url?: string | null
           twitter?: string | null
@@ -46,6 +60,9 @@ export type Database = {
         }
         Update: {
           ai_generated_summary?: string | null
+          ai_processed?: boolean | null
+          amount_normalized?: number | null
+          amount_raw?: string | null
           announcement_username?: string | null
           associated_tweet_id?: string | null
           categories?: string[] | null
@@ -53,8 +70,12 @@ export type Database = {
           description?: string
           funding?: Json | null
           id?: string
+          investors?: string[] | null
+          lead_investor?: string | null
           logo?: string | null
           name?: string
+          processed_at?: string | null
+          round_type?: string | null
           token?: string | null
           tweet_url?: string | null
           twitter?: string | null

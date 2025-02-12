@@ -2,3 +2,6 @@
 project_id = "zryhlwfkovkxtqiwzhai"
 [functions.fetch-submissions]
 verify_jwt = false
+
+[functions.enrich-crypto-fundraising]
+verify_jwt = false
