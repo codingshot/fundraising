@@ -15,6 +15,9 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<'card' | 'row'>('card');
   const [isFetching, setIsFetching] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]); // 0 to 100M
+  const [roundType, setRoundType] = useState("all");
 
   const {
     data: submissions,
@@ -138,13 +141,25 @@ const Index = () => {
       </header>
 
       <main className="container py-6">
-        <FilterBar timeFilter={timeFilter} onTimeFilterChange={setTimeFilter} />
+        <FilterBar 
+          timeFilter={timeFilter} 
+          onTimeFilterChange={setTimeFilter}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          amountRange={amountRange}
+          onAmountRangeChange={setAmountRange}
+          roundType={roundType}
+          onRoundTypeChange={setRoundType}
+        />
         <ProjectGrid
           submissions={submissions || []}
           isLoading={isLoading}
           timeFilter={timeFilter}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          searchValue={searchValue}
+          amountRange={amountRange}
+          roundType={roundType}
         />
       </main>
     </div>
