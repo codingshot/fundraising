@@ -11,6 +11,9 @@ export type Database = {
     Tables: {
       crypto_fundraising: {
         Row: {
+          ai_generated_summary: string | null
+          announcement_username: string | null
+          associated_tweet_id: string | null
           categories: string[] | null
           created_at: string
           description: string
@@ -25,6 +28,9 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          ai_generated_summary?: string | null
+          announcement_username?: string | null
+          associated_tweet_id?: string | null
           categories?: string[] | null
           created_at?: string
           description: string
@@ -39,6 +45,9 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          ai_generated_summary?: string | null
+          announcement_username?: string | null
+          associated_tweet_id?: string | null
           categories?: string[] | null
           created_at?: string
           description?: string
