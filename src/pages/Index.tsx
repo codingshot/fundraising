@@ -17,12 +17,14 @@ const Index = () => {
   } = useQuery({
     queryKey: ["projects"],
     queryFn: fetchProjects,
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch projects. Please try again later.",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch projects. Please try again later.",
+        });
+      },
     },
   });
 
