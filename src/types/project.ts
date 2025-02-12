@@ -11,6 +11,11 @@ export interface CuratedSubmission {
     author_name?: string;
     author_profile_image_url?: string;
   };
+  amount_raised?: number;
+  investors?: string[];
+  token?: string;
+  lead_investor?: string;
+  round_type?: string;
   tweetId: string;
   userId: string;
   username: string;

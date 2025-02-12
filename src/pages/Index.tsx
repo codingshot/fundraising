@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { fetchCuratedSubmissions } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
@@ -6,10 +5,13 @@ import { FilterBar } from "@/components/FilterBar";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
   const [timeFilter, setTimeFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<'card' | 'row'>('card');
   const [isFetching, setIsFetching] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -84,10 +86,20 @@ const Index = () => {
     }
   };
 
-  // Add debug logging
-  console.log("Submissions from query:", submissions);
-  console.log("Loading state:", isLoading);
-  console.log("Error state:", error);
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <Alert variant="destructive">
+          <ExclamationTriangleIcon className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load fundraising announcements. Please try again later.
+            {error instanceof Error ? <p className="mt-2 text-sm">{error.message}</p> : null}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,6 +142,8 @@ const Index = () => {
           submissions={submissions || []}
           isLoading={isLoading}
           timeFilter={timeFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       </main>
     </div>

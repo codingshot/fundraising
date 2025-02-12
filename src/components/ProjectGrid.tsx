@@ -2,17 +2,23 @@
 import { CuratedSubmission } from "@/types/project";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectSkeleton } from "./ProjectSkeleton";
+import { LayoutGrid, List } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ProjectGridProps {
   submissions: CuratedSubmission[];
   isLoading: boolean;
   timeFilter: string;
+  viewMode: 'card' | 'row';
+  onViewModeChange: (mode: 'card' | 'row') => void;
 }
 
 export const ProjectGrid = ({
   submissions,
   isLoading,
   timeFilter,
+  viewMode,
+  onViewModeChange,
 }: ProjectGridProps) => {
   if (isLoading) {
     return (
@@ -45,11 +51,51 @@ export const ProjectGrid = ({
     }
   });
 
+  if (filteredSubmissions.length === 0) {
+    return (
+      <Alert className="mt-6">
+        <AlertDescription>
+          No fundraising announcements found for the selected time period.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-      {filteredSubmissions.map((submission) => (
-        <ProjectCard key={submission.id} submission={submission} />
-      ))}
+    <div className="space-y-6">
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => onViewModeChange('card')}
+          className={`p-2 rounded-md transition-colors ${
+            viewMode === 'card' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+          }`}
+          title="Card view"
+        >
+          <LayoutGrid className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => onViewModeChange('row')}
+          className={`p-2 rounded-md transition-colors ${
+            viewMode === 'row' ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+          }`}
+          title="Row view"
+        >
+          <List className="w-5 h-5" />
+        </button>
+      </div>
+      <div className={
+        viewMode === 'card' 
+          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          : "space-y-4"
+      }>
+        {filteredSubmissions.map((submission) => (
+          <ProjectCard 
+            key={submission.id} 
+            submission={submission}
+            viewMode={viewMode}
+          />
+        ))}
+      </div>
     </div>
   );
 };
