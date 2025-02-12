@@ -476,6 +476,48 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_fundraises: {
+        Row: {
+          amount_raised: number | null
+          announcement_username: string | null
+          created_at: string
+          description: string
+          id: string
+          investors: string[] | null
+          name: string
+          original_submission_id: string
+          processed_at: string
+          token: string | null
+          twitter_url: string | null
+        }
+        Insert: {
+          amount_raised?: number | null
+          announcement_username?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          investors?: string[] | null
+          name: string
+          original_submission_id: string
+          processed_at?: string
+          token?: string | null
+          twitter_url?: string | null
+        }
+        Update: {
+          amount_raised?: number | null
+          announcement_username?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          investors?: string[] | null
+          name?: string
+          original_submission_id?: string
+          processed_at?: string
+          token?: string | null
+          twitter_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

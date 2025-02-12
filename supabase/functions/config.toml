@@ -1,0 +1,5 @@
+
+project_id = "zryhlwfkovkxtqiwzhai"
+[scheduled-fetch]
+schedule = "*/30 * * * *"  # Run every 30 minutes
+verify_jwt = false
