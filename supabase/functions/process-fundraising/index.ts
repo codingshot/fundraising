@@ -23,7 +23,7 @@ serve(async (req) => {
 
     // Check if this tweet is already processed
     const { data: existing } = await supabase
-      .from('crypto_fundraising')
+      .from('processed_fundraises')
       .select('id')
       .eq('associated_tweet_id', submission.tweetId)
       .single();
@@ -47,31 +47,73 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Extract fundraising details from the tweet. Return a JSON object with: amount_raised (number), investors (array of strings), description (string), and token (string if mentioned).'
+            content: `Extract fundraising details from the tweet. Return a JSON object with the following fields:
+            - amount_raised: number (in USD, remove any symbols and convert to number, if a range is given use the higher number, null if not mentioned)
+            - investors: array of strings (list of all investors mentioned)
+            - lead_investor: string (the lead investor if specified, null if not mentioned)
+            - round_type: string (e.g., Seed, Series A, Pre-seed, etc., null if not mentioned)
+            - token: string (token symbol if mentioned, null if not mentioned)
+            - description: string (a clean description of the fundraising)`
           },
           {
             role: 'user',
-            content: submission.content + (submission.curatorNotes ? `\nCurator Notes: ${submission.curatorNotes}` : '')
+            content: `Tweet: ${submission.content}\n${submission.curatorNotes ? `Curator Notes: ${submission.curatorNotes}` : ''}`
           }
         ],
+        temperature: 0.1, // Lower temperature for more consistent extraction
       }),
     });
 
+    if (!aiResponse.ok) {
+      throw new Error(`OpenAI API error: ${aiResponse.statusText}`);
+    }
+
     const aiData = await aiResponse.json();
-    const extractedInfo = JSON.parse(aiData.choices[0].message.content);
+    console.log('OpenAI Response:', aiData);
+
+    let extractedInfo;
+    try {
+      extractedInfo = JSON.parse(aiData.choices[0].message.content);
+      
+      // Clean and validate amount_raised
+      if (extractedInfo.amount_raised) {
+        const amountStr = String(extractedInfo.amount_raised)
+          .replace(/[^0-9.]/g, '')
+          .replace(/\.(?=.*\.)/g, '');
+        extractedInfo.amount_raised = parseFloat(amountStr) || null;
+      }
+
+      // Ensure arrays are arrays
+      extractedInfo.investors = Array.isArray(extractedInfo.investors) ? extractedInfo.investors : [];
+      
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      extractedInfo = {
+        amount_raised: null,
+        investors: [],
+        lead_investor: null,
+        round_type: null,
+        token: null,
+        description: submission.content,
+      };
+    }
 
     // Insert into database
     const { data: insertedData, error } = await supabase
-      .from('crypto_fundraising')
+      .from('processed_fundraises')
       .insert({
-        name: submission.username,
+        original_submission_id: submission.tweetId,
         description: extractedInfo.description,
-        funding: { amount: extractedInfo.amount_raised, investors: extractedInfo.investors },
+        amount_raised: extractedInfo.amount_raised,
+        investors: extractedInfo.investors,
+        lead_investor: extractedInfo.lead_investor,
+        round_type: extractedInfo.round_type,
         token: extractedInfo.token,
-        associated_tweet_id: submission.tweetId,
         announcement_username: submission.username,
-        tweet_url: `https://twitter.com/${submission.username}/status/${submission.tweetId}`,
-        ai_generated_summary: aiData.choices[0].message.content,
+        twitter_url: submission.tweet_url || `https://twitter.com/${submission.username}/status/${submission.tweetId}`,
+        tweet_timestamp: submission.submittedAt,
+        processed_at: new Date().toISOString(),
+        ai_processed: true,
       })
       .select()
       .single();

@@ -40,9 +40,8 @@ serve(async (req) => {
 
     for (const entry of unprocessedEntries || []) {
       try {
-        console.log(`Processing entry ${entry.id}`);
-
-        const prompt = `${entry.description}\n${entry.curatorNotes || ''}`;
+        const prompt = `${entry.description || ''}\n${entry.curator_notes || ''}`;
+        console.log(`Processing entry ${entry.id} with prompt: ${prompt}`);
 
         // Process with OpenAI
         const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -56,50 +55,67 @@ serve(async (req) => {
             messages: [
               {
                 role: 'system',
-                content: `Extract fundraising details from the tweet. Return a JSON object with:
-                - amount_raised (number or null): The fundraising amount in USD (convert to number, remove any $ or other currency symbols)
-                - investors (array of strings): List of investors, empty array if none mentioned
-                - token (string or null): Token symbol if mentioned
-                - lead_investor (string or null): The lead investor if specified
-                - round_type (string or null): The type of round (e.g., Seed, Series A, etc.)`
+                content: `Extract fundraising details from the tweet. Return a JSON object with the following fields:
+                - amount_raised: number (in USD, remove any symbols and convert to number, if a range is given use the higher number, null if not mentioned)
+                - investors: array of strings (list of all investors mentioned)
+                - lead_investor: string (the lead investor if specified, null if not mentioned)
+                - round_type: string (e.g., Seed, Series A, Pre-seed, etc., null if not mentioned)
+                - token: string (token symbol if mentioned, null if not mentioned)`
               },
               {
                 role: 'user',
                 content: prompt
               }
             ],
-            temperature: 0.3,
-            max_tokens: 500,
+            temperature: 0.1, // Lower temperature for more consistent extraction
           }),
         });
 
         if (!aiResponse.ok) {
-          throw new Error(`OpenAI API error: ${aiResponse.statusText}`);
+          throw new Error(`OpenAI API error: ${aiResponse.status}`);
         }
 
         const aiData = await aiResponse.json();
-        const extractedInfo = JSON.parse(aiData.choices[0].message.content);
+        console.log('OpenAI response:', aiData);
 
-        // Clean amount_raised
-        let amount_raised = null;
-        if (extractedInfo.amount_raised) {
-          const cleanedAmount = String(extractedInfo.amount_raised)
-            .replace(/[^0-9.]/g, '')
-            .replace(/\.(?=.*\.)/g, '');
-          amount_raised = parseFloat(cleanedAmount) || null;
+        let extractedInfo;
+        try {
+          extractedInfo = JSON.parse(aiData.choices[0].message.content);
+
+          // Clean amount_raised
+          if (extractedInfo.amount_raised) {
+            const amountStr = String(extractedInfo.amount_raised)
+              .replace(/[^0-9.]/g, '')
+              .replace(/\.(?=.*\.)/g, '');
+            extractedInfo.amount_raised = parseFloat(amountStr) || null;
+          }
+
+          // Ensure arrays are arrays
+          extractedInfo.investors = Array.isArray(extractedInfo.investors) ? extractedInfo.investors : [];
+
+        } catch (parseError) {
+          console.error('Error parsing OpenAI response:', parseError);
+          extractedInfo = {
+            amount_raised: null,
+            investors: [],
+            lead_investor: null,
+            round_type: null,
+            token: null
+          };
         }
 
         // Update database entry
         const { error: updateError } = await supabase
           .from('processed_fundraises')
           .update({
-            amount_raised: amount_raised,
-            investors: Array.isArray(extractedInfo.investors) ? extractedInfo.investors : [],
-            token: extractedInfo.token,
+            amount_raised: extractedInfo.amount_raised,
+            investors: extractedInfo.investors,
             lead_investor: extractedInfo.lead_investor,
             round_type: extractedInfo.round_type,
+            token: extractedInfo.token,
             ai_processed: true,
-            ai_processing_attempts: entry.ai_processing_attempts + 1
+            ai_processing_attempts: entry.ai_processing_attempts + 1,
+            processed_at: new Date().toISOString()
           })
           .eq('id', entry.id);
 
