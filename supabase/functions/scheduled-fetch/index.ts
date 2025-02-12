@@ -74,7 +74,7 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'gpt-4',
             messages: [
               {
                 role: 'system',
@@ -91,6 +91,8 @@ serve(async (req) => {
                 content: `${submission.content}\n${submission.curatorNotes || ''}`
               }
             ],
+            temperature: 0.3, // Lower temperature for more consistent outputs
+            max_tokens: 500,
           }),
         });
 
@@ -108,6 +110,13 @@ serve(async (req) => {
         const extractedInfo = JSON.parse(aiData.choices[0].message.content);
         console.log('Extracted info:', extractedInfo);
 
+        // Clean and validate the amount_raised
+        let amount_raised = null;
+        if (extractedInfo.amount_raised) {
+          const numericAmount = parseFloat(String(extractedInfo.amount_raised).replace(/[^0-9.]/g, ''));
+          amount_raised = !isNaN(numericAmount) ? numericAmount : null;
+        }
+
         // Insert into database
         const { error: insertError } = await supabase
           .from('processed_fundraises')
@@ -115,8 +124,8 @@ serve(async (req) => {
             original_submission_id: submission.tweetId,
             name: submission.username,
             description: extractedInfo.description,
-            amount_raised: extractedInfo.amount_raised,
-            investors: extractedInfo.investors || [],
+            amount_raised: amount_raised,
+            investors: Array.isArray(extractedInfo.investors) ? extractedInfo.investors : [],
             token: extractedInfo.token,
             lead_investor: extractedInfo.lead_investor,
             round_type: extractedInfo.round_type,
