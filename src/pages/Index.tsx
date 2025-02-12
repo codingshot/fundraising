@@ -5,15 +5,18 @@ import { ProjectGrid } from "@/components/ProjectGrid";
 import { FilterBar } from "@/components/FilterBar";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const { toast } = useToast();
   const [timeFilter, setTimeFilter] = useState("all");
+  const [isFetching, setIsFetching] = useState(false);
 
   const {
     data: submissions,
     isLoading,
     error,
+    refetch
   } = useQuery({
     queryKey: ["curated-submissions"],
     queryFn: fetchCuratedSubmissions,
@@ -27,6 +30,32 @@ const Index = () => {
       },
     },
   });
+
+  const handleFetchData = async () => {
+    try {
+      setIsFetching(true);
+      const { data, error } = await supabase.functions.invoke('fetch-submissions');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      
+      // Refetch the submissions to show new data
+      refetch();
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to fetch new submissions",
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   // Add debug logging
   console.log("Submissions from query:", submissions);
@@ -49,6 +78,13 @@ const Index = () => {
               Telegram feed
             </a>
           </p>
+          <button
+            onClick={handleFetchData}
+            disabled={isFetching}
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
+          </button>
         </div>
       </header>
 
