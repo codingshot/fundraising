@@ -478,6 +478,8 @@ export type Database = {
       }
       processed_fundraises: {
         Row: {
+          ai_processed: boolean | null
+          ai_processing_attempts: number | null
           amount_raised: number | null
           announcement_username: string | null
           created_at: string
@@ -494,6 +496,8 @@ export type Database = {
           twitter_url: string | null
         }
         Insert: {
+          ai_processed?: boolean | null
+          ai_processing_attempts?: number | null
           amount_raised?: number | null
           announcement_username?: string | null
           created_at?: string
@@ -510,6 +514,8 @@ export type Database = {
           twitter_url?: string | null
         }
         Update: {
+          ai_processed?: boolean | null
+          ai_processing_attempts?: number | null
           amount_raised?: number | null
           announcement_username?: string | null
           created_at?: string

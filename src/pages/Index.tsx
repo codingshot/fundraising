@@ -11,6 +11,7 @@ const Index = () => {
   const { toast } = useToast();
   const [timeFilter, setTimeFilter] = useState("all");
   const [isFetching, setIsFetching] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const {
     data: submissions,
@@ -57,6 +58,32 @@ const Index = () => {
     }
   };
 
+  const handleProcessExisting = async () => {
+    try {
+      setIsProcessing(true);
+      const { data, error } = await supabase.functions.invoke('process-existing-fundraises');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      
+      // Refetch to show updated data
+      refetch();
+    } catch (error) {
+      console.error('Error processing existing data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to process existing submissions",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Add debug logging
   console.log("Submissions from query:", submissions);
   console.log("Loading state:", isLoading);
@@ -78,13 +105,22 @@ const Index = () => {
               Telegram feed
             </a>
           </p>
-          <button
-            onClick={handleFetchData}
-            disabled={isFetching}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-          >
-            {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
-          </button>
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={handleFetchData}
+              disabled={isFetching}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
+            </button>
+            <button
+              onClick={handleProcessExisting}
+              disabled={isProcessing}
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 disabled:opacity-50"
+            >
+              {isProcessing ? 'Processing...' : 'Process Existing Entries'}
+            </button>
+          </div>
         </div>
       </header>
 
