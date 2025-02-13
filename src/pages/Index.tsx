@@ -252,6 +252,7 @@ const Index = () => {
         </div>
       </header>
 
+      {/* NewsTicker moved here, right after the header */}
       <NewsTicker />
 
       <main className="container py-6">
