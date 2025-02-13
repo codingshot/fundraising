@@ -23,6 +23,20 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // First get existing data to preserve information
+    const { data: existingData, error: fetchError } = await supabase
+      .from('processed_fundraises')
+      .select('*');
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch existing data: ${fetchError.message}`);
+    }
+
+    // Create a map of existing data by Project name for quick lookup
+    const existingDataMap = new Map(
+      existingData?.map(item => [item.Project?.toLowerCase(), item]) || []
+    );
+
     // Fetch CSV file from public URL
     const csvUrl = `${supabaseUrl}/storage/v1/object/public/public/cryptofundraises_cleaned.csv`;
     const response = await fetch(csvUrl);
@@ -62,6 +76,9 @@ Deno.serve(async (req) => {
         const tagsArray = Tags ? Tags.split(',').map(t => t.trim()) : [];
         const otherInvestorsArray = Other_Investors ? Other_Investors.split(',').map(i => i.trim()) : [];
 
+        // Look for existing data
+        const existingEntry = existingDataMap.get(Project?.toLowerCase());
+
         // Insert into temporary table
         const { error: insertError } = await supabase
           .from('temp_fundraises')
@@ -78,7 +95,22 @@ Deno.serve(async (req) => {
             Other_Investors: otherInvestorsArray,
             Description,
             Announcement_Link,
-            Social_Links
+            Social_Links,
+            // Preserve existing data if available
+            amount_raised: existingEntry?.amount_raised || null,
+            investors: existingEntry?.investors || otherInvestorsArray,
+            token: existingEntry?.token || null,
+            twitter_url: existingEntry?.twitter_url || null,
+            announcement_username: existingEntry?.announcement_username || null,
+            original_submission_id: existingEntry?.original_submission_id || null,
+            round_type: existingEntry?.round_type || Round,
+            lead_investor: existingEntry?.lead_investor || Lead_Investors,
+            tweet_timestamp: existingEntry?.tweet_timestamp || null,
+            ai_processed: existingEntry?.ai_processed || false,
+            ai_processing_attempts: existingEntry?.ai_processing_attempts || 0,
+            name: existingEntry?.name || Project,
+            company_id: existingEntry?.company_id || null,
+            description_processed: existingEntry?.description || Description
           }]);
 
         if (insertError) throw insertError;

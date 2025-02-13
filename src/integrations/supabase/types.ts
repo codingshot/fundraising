@@ -833,50 +833,98 @@ export type Database = {
       }
       temp_fundraises: {
         Row: {
+          ai_processed: boolean | null
+          ai_processing_attempts: number | null
           amount: number | null
+          amount_raised: number | null
           announcement_link: string | null
+          announcement_username: string | null
           category: string | null
+          company_id: string | null
+          created_at: string | null
           date: string | null
           description: string | null
+          description_processed: string | null
+          investors: string[] | null
+          lead_investor: string | null
           lead_investors: string | null
+          name: string | null
+          original_submission_id: string | null
           other_investors: string[] | null
+          processed_at: string | null
           project: string | null
           round: string | null
+          round_type: string | null
           slug: string | null
           social_links: string | null
           tags: string[] | null
+          token: string | null
+          tweet_timestamp: string | null
+          twitter_url: string | null
           valuation: number | null
           website: string | null
         }
         Insert: {
+          ai_processed?: boolean | null
+          ai_processing_attempts?: number | null
           amount?: number | null
+          amount_raised?: number | null
           announcement_link?: string | null
+          announcement_username?: string | null
           category?: string | null
+          company_id?: string | null
+          created_at?: string | null
           date?: string | null
           description?: string | null
+          description_processed?: string | null
+          investors?: string[] | null
+          lead_investor?: string | null
           lead_investors?: string | null
+          name?: string | null
+          original_submission_id?: string | null
           other_investors?: string[] | null
+          processed_at?: string | null
           project?: string | null
           round?: string | null
+          round_type?: string | null
           slug?: string | null
           social_links?: string | null
           tags?: string[] | null
+          token?: string | null
+          tweet_timestamp?: string | null
+          twitter_url?: string | null
           valuation?: number | null
           website?: string | null
         }
         Update: {
+          ai_processed?: boolean | null
+          ai_processing_attempts?: number | null
           amount?: number | null
+          amount_raised?: number | null
           announcement_link?: string | null
+          announcement_username?: string | null
           category?: string | null
+          company_id?: string | null
+          created_at?: string | null
           date?: string | null
           description?: string | null
+          description_processed?: string | null
+          investors?: string[] | null
+          lead_investor?: string | null
           lead_investors?: string | null
+          name?: string | null
+          original_submission_id?: string | null
           other_investors?: string[] | null
+          processed_at?: string | null
           project?: string | null
           round?: string | null
+          round_type?: string | null
           slug?: string | null
           social_links?: string | null
           tags?: string[] | null
+          token?: string | null
+          tweet_timestamp?: string | null
+          twitter_url?: string | null
           valuation?: number | null
           website?: string | null
         }
