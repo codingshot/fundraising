@@ -13,36 +13,49 @@ Deno.serve(async (req) => {
 
   try {
     console.log('Fetching Telegram feed...')
-    const response = await fetch('https://t.me/s/crypto_fundraising')
+    const response = await fetch('https://t.me/s/cryptofundraises') // Updated to correct channel URL
     const html = await response.text()
 
-    // Extract posts using regex
-    const postsRegex = /<div class="tgme_widget_message_text js-message_text"[^>]*>([\s\S]*?)<\/div>/g
-    const timeRegex = /<time class="time"[^>]*datetime="([^"]*)"[^>]*>/g
-    
+    // Updated regex patterns to match Telegram's HTML structure
+    const messagePattern = /<div class="tgme_widget_message_bubble">([\s\S]*?)<\/div>/g
+    const textPattern = /<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/
+    const timePattern = /<time class="time" datetime="([^"]+)">/
+
     const posts: { text: string; timestamp: string }[] = []
-    let match
-    let timeMatch
+    let messageMatch
 
-    while ((match = postsRegex.exec(html)) !== null && (timeMatch = timeRegex.exec(html)) !== null) {
-      const text = match[1]
-        .replace(/<[^>]+>/g, '') // Remove HTML tags
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .trim()
+    while ((messageMatch = messagePattern.exec(html)) !== null) {
+      const messageContent = messageMatch[1]
+      
+      // Extract text content
+      const textMatch = messageContent.match(textPattern)
+      const timeMatch = messageContent.match(timePattern)
+      
+      if (textMatch && timeMatch) {
+        const text = textMatch[1]
+          .replace(/<br\/?>/g, '\n') // Replace <br> with newlines
+          .replace(/<[^>]+>/g, '') // Remove other HTML tags
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim()
 
-      posts.push({
-        text,
-        timestamp: timeMatch[1]
-      })
+        posts.push({
+          text,
+          timestamp: timeMatch[1]
+        })
+      }
     }
 
-    // Return most recent 10 posts
-    const recentPosts = posts.slice(0, 10)
+    // Sort posts by timestamp (newest first) and take the most recent 10
+    const recentPosts = posts
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 10)
 
+    console.log(`Found ${posts.length} posts, returning ${recentPosts.length} most recent`)
+    
     return new Response(JSON.stringify({ posts: recentPosts }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
