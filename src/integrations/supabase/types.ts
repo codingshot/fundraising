@@ -126,6 +126,48 @@ export type Database = {
           },
         ]
       }
+      fundraising_data: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          date: string | null
+          description: string | null
+          id: string
+          lead_investor: string | null
+          other_investors: string[] | null
+          processed: boolean | null
+          project_name: string
+          round_type: string | null
+          website: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          lead_investor?: string | null
+          other_investors?: string[] | null
+          processed?: boolean | null
+          project_name: string
+          round_type?: string | null
+          website?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          date?: string | null
+          description?: string | null
+          id?: string
+          lead_investor?: string | null
+          other_investors?: string[] | null
+          processed?: boolean | null
+          project_name?: string
+          round_type?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       idea_comments: {
         Row: {
           content: string
