@@ -60,7 +60,11 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
           timestamp: item.processed_at,
           moderationResponseTweetId: item.original_submission_id
         }],
-        moderationResponseTweetId: item.original_submission_id
+        moderationResponseTweetId: item.original_submission_id,
+        amount_raised: item.amount_raised,
+        round_type: item.round_type,
+        lead_investor: item.lead_investor,
+        investors: item.investors
       };
     });
     

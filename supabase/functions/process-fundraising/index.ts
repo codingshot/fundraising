@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -77,19 +78,44 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Extract fundraising details from the tweet. Pay special attention to the amount raised - look for numbers with M, MM, million, B, billion, or USD indicators. Return a JSON object with:
-            - amount_raised: string (preserve the exact amount as mentioned, including M/B indicators, e.g., "10M", "1.5B", "500K", etc. For ranges use the higher number)
-            - investors: array of strings (list of all investors mentioned)
-            - lead_investor: string (the lead investor if specified, null if not mentioned)
-            - round_type: string (e.g., Seed, Series A, Pre-seed, etc., null if not mentioned)
-            - token: string (token symbol if mentioned, null if not mentioned)
-            - description: string (a clean description of the fundraising)
-            
-            Example outputs for amount_raised:
-            "10M" for "$10M", "10 million", "10MM"
-            "1.5B" for "$1.5B", "1.5 billion"
-            "500K" for "$500K", "500,000"
-            For ranges like "$8-10M" use "10M"`
+            content: `You are a precise fundraising data extractor. Extract fundraising details from tweets with these rules:
+
+1. For amount_raised:
+- Look for numbers followed by M, MM, million, B, billion, or USD
+- Convert written numbers to digits (e.g., "ten million" -> "10M")
+- For ranges, use the higher number
+- Keep original formatting in response (e.g., "10M", "1.5B", "500K")
+- Include the amount even if it's mentioned in a thread or quoted
+- Examples:
+  "$10M" or "10 million" -> "10M"
+  "$1.5B" or "1.5 billion" -> "1.5B"
+  "$500K" or "500,000" -> "500K"
+  "8-10M" -> "10M"
+  "raised ten million" -> "10M"
+
+2. For investors:
+- Extract ALL mentioned investors
+- Remove @ symbols
+- Include both lead and participating investors
+- Clean up company names (e.g., "XYZ Capital", not "@XYZcap")
+
+3. For lead_investor:
+- Look for phrases like "led by", "spearheaded by", "led investment"
+- Extract the main investing entity
+- Return null if no clear lead is mentioned
+
+4. For round_type:
+- Look for specific phrases: Seed, Series A/B/C/D, Pre-seed, Strategic, Private, Public
+- Include modifiers like "strategic" or "private"
+- Default to null if unclear
+
+Return a JSON object with these fields:
+- amount_raised: string (formatted as above)
+- investors: string[] (array of investor names)
+- lead_investor: string|null
+- round_type: string|null
+- token: string|null (if a token/ticker is mentioned)
+- description: string (clean description of fundraising)`
           },
           {
             role: 'user',
@@ -116,10 +142,26 @@ serve(async (req) => {
         const normalizedAmount = normalizeAmount(extractedInfo.amount_raised);
         extractedInfo.amount_raised = normalizedAmount;
         console.log('Normalized amount:', normalizedAmount);
+      } else {
+        // Secondary check in description for amounts
+        const description = extractedInfo.description.toLowerCase();
+        const amountMatches = description.match(/(\d+(\.\d+)?)\s*(million|m|b|billion)/i);
+        if (amountMatches) {
+          const normalizedAmount = normalizeAmount(amountMatches[0]);
+          extractedInfo.amount_raised = normalizedAmount;
+          console.log('Found amount in description:', normalizedAmount);
+        }
       }
 
-      // Ensure arrays are arrays
-      extractedInfo.investors = Array.isArray(extractedInfo.investors) ? extractedInfo.investors : [];
+      // Ensure arrays are arrays and remove @ symbols from investors
+      extractedInfo.investors = Array.isArray(extractedInfo.investors) 
+        ? extractedInfo.investors.map(inv => inv.replace(/^@/, ''))
+        : [];
+      
+      // Clean up lead investor
+      if (extractedInfo.lead_investor) {
+        extractedInfo.lead_investor = extractedInfo.lead_investor.replace(/^@/, '');
+      }
       
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);

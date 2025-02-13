@@ -8,6 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { DownloadMenu } from "@/components/DownloadMenu";
+import { format } from "date-fns";
 
 const Index = () => {
   const { toast } = useToast();
@@ -37,6 +39,24 @@ const Index = () => {
       },
     },
   });
+
+  // Get top 3 fundraises of the month
+  const getTopMonthlyRaises = () => {
+    if (!submissions) return [];
+    
+    const now = new Date();
+    const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+    
+    return submissions
+      .filter(submission => {
+        const submissionDate = new Date(submission.created_at);
+        return submissionDate >= oneMonthAgo && 
+               submission.amount_raised && 
+               submission.amount_raised > 0;
+      })
+      .sort((a, b) => (b.amount_raised || 0) - (a.amount_raised || 0))
+      .slice(0, 3);
+  };
 
   const handleFetchData = async () => {
     try {
@@ -105,22 +125,61 @@ const Index = () => {
     );
   }
 
+  // Check if all entries are processed
+  const hasUnprocessedEntries = submissions?.some(
+    (submission) => !submission.amount_raised && !submission.round_type
+  );
+
+  const topRaises = getTopMonthlyRaises();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
-          <p className="mt-2 text-muted-foreground">
-            A feed of all the latest crypto fundraising announcements.{" "}
-            <a
-              href="https://t.me/cryptofundraises"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Telegram feed
-            </a>
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
+              <p className="mt-2 text-muted-foreground">
+                A feed of all the latest crypto fundraising announcements.{" "}
+                <a
+                  href="https://t.me/cryptofundraises"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Telegram feed
+                </a>
+              </p>
+              
+              {/* Top Monthly Raises Section */}
+              {topRaises.length > 0 && (
+                <div className="mt-4 p-4 bg-accent/50 rounded-lg">
+                  <h2 className="text-lg font-semibold mb-3">Top Raises This Month</h2>
+                  <div className="grid gap-3">
+                    {topRaises.map((raise, index) => (
+                      <div key={raise.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-primary">{`#${index + 1}`}</span>
+                          <span className="font-medium">{raise.tweet_data?.author_name}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-medium bg-primary/10 px-2 py-1 rounded">
+                            {raise.round_type}
+                          </span>
+                          <span className="font-semibold text-primary">
+                            ${raise.amount_raised?.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {submissions && submissions.length > 0 && (
+              <DownloadMenu submissions={submissions} />
+            )}
+          </div>
           <div className="flex gap-4 mt-4">
             <button
               onClick={handleFetchData}
@@ -129,13 +188,15 @@ const Index = () => {
             >
               {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
             </button>
-            <button
-              onClick={handleProcessExisting}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 disabled:opacity-50"
-            >
-              {isProcessing ? 'Processing...' : 'Process Existing Entries'}
-            </button>
+            {hasUnprocessedEntries && (
+              <button
+                onClick={handleProcessExisting}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : 'Process Existing Entries'}
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -12,6 +12,9 @@ export type Database = {
       crypto_fundraising: {
         Row: {
           ai_generated_summary: string | null
+          ai_processed: boolean | null
+          amount_normalized: number | null
+          amount_raw: string | null
           announcement_username: string | null
           associated_tweet_id: string | null
           categories: string[] | null
@@ -19,16 +22,25 @@ export type Database = {
           description: string
           funding: Json | null
           id: string
+          investors: string[] | null
+          lead_investor: string | null
           logo: string | null
           name: string
+          original_submission_id: string
+          processed_at: string | null
+          round_type: string | null
           token: string | null
-          tweet_url: string | null
+          tweet_timestamp: string | null
           twitter: string | null
+          twitter_url: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
           ai_generated_summary?: string | null
+          ai_processed?: boolean | null
+          amount_normalized?: number | null
+          amount_raw?: string | null
           announcement_username?: string | null
           associated_tweet_id?: string | null
           categories?: string[] | null
@@ -36,16 +48,25 @@ export type Database = {
           description: string
           funding?: Json | null
           id?: string
+          investors?: string[] | null
+          lead_investor?: string | null
           logo?: string | null
           name: string
+          original_submission_id: string
+          processed_at?: string | null
+          round_type?: string | null
           token?: string | null
-          tweet_url?: string | null
+          tweet_timestamp?: string | null
           twitter?: string | null
+          twitter_url?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           ai_generated_summary?: string | null
+          ai_processed?: boolean | null
+          amount_normalized?: number | null
+          amount_raw?: string | null
           announcement_username?: string | null
           associated_tweet_id?: string | null
           categories?: string[] | null
@@ -53,11 +74,17 @@ export type Database = {
           description?: string
           funding?: Json | null
           id?: string
+          investors?: string[] | null
+          lead_investor?: string | null
           logo?: string | null
           name?: string
+          original_submission_id?: string
+          processed_at?: string | null
+          round_type?: string | null
           token?: string | null
-          tweet_url?: string | null
+          tweet_timestamp?: string | null
           twitter?: string | null
+          twitter_url?: string | null
           updated_at?: string
           website?: string | null
         }
