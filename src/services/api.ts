@@ -31,13 +31,13 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
         status: 'approved',
         created_at: item.created_at,
         tweet_data: {
-          text: item.Description || item.description,
+          text: item.description,
           author_username: item.announcement_username,
           author_name: item.Project || item.name,
         },
         tweetId: item.original_submission_id,
         username: item.announcement_username,
-        content: item.Description || item.description,
+        content: item.description,
         curatorNotes: `${item.Round ? `Round: ${item.Round}\n` : ''}${
           item.Amount ? `Amount: $${item.Amount.toLocaleString()}` : 'Amount: Undisclosed'
         }\n${
@@ -74,7 +74,7 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
         Tags: item.Tags,
         Lead_Investors: item.Lead_Investors,
         Other_Investors: item.Other_Investors,
-        Description: item.Description || item.description,
+        Description: item.description,
         Announcement_Link: item.Announcement_Link,
         Social_Links: item.Social_Links,
         slug: item.slug
