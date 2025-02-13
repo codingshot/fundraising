@@ -835,6 +835,12 @@ export type Database = {
         }
         Returns: string
       }
+      generate_slug: {
+        Args: {
+          name: string
+        }
+        Returns: string
+      }
       get_follower_count: {
         Args: {
           user_id: string
