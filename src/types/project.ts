@@ -35,4 +35,5 @@ export interface CuratedSubmission {
     moderationResponseTweetId: string;
   }>;
   moderationResponseTweetId: string;
+  slug?: string; // Add the slug property
 }
