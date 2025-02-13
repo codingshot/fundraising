@@ -507,62 +507,98 @@ export type Database = {
         Row: {
           ai_processed: boolean | null
           ai_processing_attempts: number | null
+          Amount: number | null
           amount_raised: number | null
+          Announcement_Link: string | null
           announcement_username: string | null
+          Category: string | null
           company_id: string | null
           created_at: string
+          Date: string | null
           description: string
           id: string
           investors: string[] | null
           lead_investor: string | null
+          Lead_Investors: string | null
           name: string
           original_submission_id: string
+          Other_Investors: string[] | null
           processed_at: string
+          Project: string | null
+          Round: string | null
           round_type: string | null
           slug: string | null
+          Social_Links: string | null
+          Tags: string[] | null
           token: string | null
           tweet_timestamp: string | null
           twitter_url: string | null
+          Valuation: number | null
+          Website: string | null
         }
         Insert: {
           ai_processed?: boolean | null
           ai_processing_attempts?: number | null
+          Amount?: number | null
           amount_raised?: number | null
+          Announcement_Link?: string | null
           announcement_username?: string | null
+          Category?: string | null
           company_id?: string | null
           created_at?: string
+          Date?: string | null
           description: string
           id?: string
           investors?: string[] | null
           lead_investor?: string | null
+          Lead_Investors?: string | null
           name: string
           original_submission_id: string
+          Other_Investors?: string[] | null
           processed_at?: string
+          Project?: string | null
+          Round?: string | null
           round_type?: string | null
           slug?: string | null
+          Social_Links?: string | null
+          Tags?: string[] | null
           token?: string | null
           tweet_timestamp?: string | null
           twitter_url?: string | null
+          Valuation?: number | null
+          Website?: string | null
         }
         Update: {
           ai_processed?: boolean | null
           ai_processing_attempts?: number | null
+          Amount?: number | null
           amount_raised?: number | null
+          Announcement_Link?: string | null
           announcement_username?: string | null
+          Category?: string | null
           company_id?: string | null
           created_at?: string
+          Date?: string | null
           description?: string
           id?: string
           investors?: string[] | null
           lead_investor?: string | null
+          Lead_Investors?: string | null
           name?: string
           original_submission_id?: string
+          Other_Investors?: string[] | null
           processed_at?: string
+          Project?: string | null
+          Round?: string | null
           round_type?: string | null
           slug?: string | null
+          Social_Links?: string | null
+          Tags?: string[] | null
           token?: string | null
           tweet_timestamp?: string | null
           twitter_url?: string | null
+          Valuation?: number | null
+          Website?: string | null
         }
         Relationships: []
       }

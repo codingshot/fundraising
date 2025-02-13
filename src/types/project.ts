@@ -11,6 +11,19 @@ export interface CuratedSubmission {
     author_name?: string;
     author_profile_image_url?: string;
   };
+  Project?: string;
+  Round?: string;
+  Website?: string;
+  Date?: string;
+  Amount?: number;
+  Valuation?: number;
+  Category?: string;
+  Tags?: string[];
+  Lead_Investors?: string;
+  Other_Investors?: string[];
+  Description?: string;
+  Announcement_Link?: string;
+  Social_Links?: string;
   amount_raised?: number;
   investors?: string[];
   token?: string;
@@ -35,5 +48,5 @@ export interface CuratedSubmission {
     moderationResponseTweetId: string;
   }>;
   moderationResponseTweetId: string;
-  slug?: string; // Add the slug property
+  slug?: string;
 }

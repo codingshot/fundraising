@@ -43,23 +43,20 @@ const FundraiseDetails = () => {
     enabled: !!fundraise,
     queryFn: async () => {
       try {
-        // Create a filter for similar fundraises
         const query = supabase
           .from("processed_fundraises")
           .select("*")
           .neq("id", fundraise.id)
           .limit(5);
 
-        // Add name filter if available
-        if (fundraise.name) {
-          query.eq("name", fundraise.name);
+        if (fundraise.Project) {
+          query.eq("Project", fundraise.Project);
         }
 
-        // Add amount filter if available
-        if (fundraise.amount_raised === null) {
-          query.is("amount_raised", null);
-        } else if (typeof fundraise.amount_raised === "number") {
-          query.eq("amount_raised", fundraise.amount_raised);
+        if (fundraise.Amount === null) {
+          query.is("Amount", null);
+        } else if (typeof fundraise.Amount === "number") {
+          query.eq("Amount", fundraise.Amount);
         }
 
         const { data, error } = await query;
@@ -112,63 +109,82 @@ const FundraiseDetails = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to home
         </Button>
-        <h1 className="text-3xl font-bold">{fundraise.announcement_username || 'Unknown Project'}</h1>
+        <h1 className="text-3xl font-bold">{fundraise.Project || 'Unknown Project'}</h1>
       </div>
       
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">{fundraise.name}</h1>
-        
         <Card className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-muted-foreground" />
                 <span className="font-semibold">Amount Raised:</span>
-                <span>{fundraise.amount_raised ? `$${fundraise.amount_raised.toLocaleString()}` : 'Undisclosed'}</span>
+                <span>{fundraise.Amount ? `$${fundraise.Amount.toLocaleString()}` : 'Undisclosed'}</span>
               </div>
               
-              {fundraise.round_type && (
+              {fundraise.Round && (
                 <div className="flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-muted-foreground" />
                   <span className="font-semibold">Round:</span>
-                  <span>{fundraise.round_type}</span>
+                  <span>{fundraise.Round}</span>
                 </div>
               )}
 
-              {fundraise.lead_investor && (
+              {fundraise.Lead_Investors && (
                 <div className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-muted-foreground" />
                   <span className="font-semibold">Lead Investor:</span>
-                  <span>{fundraise.lead_investor}</span>
+                  <span>{fundraise.Lead_Investors}</span>
+                </div>
+              )}
+
+              {fundraise.Category && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Category:</span>
+                  <span>{fundraise.Category}</span>
                 </div>
               )}
             </div>
 
             <div className="space-y-4">
-              {fundraise.investors && fundraise.investors.length > 0 && (
+              {fundraise.Other_Investors && fundraise.Other_Investors.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Investors</h3>
+                  <h3 className="text-lg font-semibold mb-2">Other Investors</h3>
                   <ul className="list-disc list-inside space-y-1">
-                    {fundraise.investors.map((investor, index) => (
+                    {fundraise.Other_Investors.map((investor, index) => (
                       <li key={index}>{investor}</li>
                     ))}
                   </ul>
                 </div>
               )}
+
+              {fundraise.Tags && fundraise.Tags.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {fundraise.Tags.map((tag, index) => (
+                      <span key={index} className="px-2 py-1 bg-accent rounded-md text-sm">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {fundraise.description && (
+          {fundraise.Description && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{fundraise.description}</p>
+              <p className="text-muted-foreground">{fundraise.Description}</p>
             </div>
           )}
 
-          {fundraise.twitter_url && (
+          {fundraise.Announcement_Link && (
             <div className="mt-6">
               <blockquote className="twitter-tweet" data-theme="light">
-                <a href={fundraise.twitter_url}>Loading tweet...</a>
+                <a href={fundraise.Announcement_Link}>Loading tweet...</a>
               </blockquote>
             </div>
           )}
@@ -180,12 +196,12 @@ const FundraiseDetails = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedFundraises.map((related) => (
                 <Card key={related.id} className="p-4">
-                  <h3 className="font-semibold">{related.name}</h3>
+                  <h3 className="font-semibold">{related.Project || related.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {related.amount_raised ? `$${related.amount_raised.toLocaleString()}` : 'Undisclosed'}
+                    {related.Amount ? `$${related.Amount.toLocaleString()}` : 'Undisclosed'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {formatDistanceToNow(new Date(related.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(related.Date || related.created_at), { addSuffix: true })}
                   </p>
                 </Card>
               ))}
