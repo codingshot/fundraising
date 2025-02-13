@@ -19,7 +19,7 @@ const FundraiseDetails = () => {
         const { data, error } = await supabase
           .from("processed_fundraises")
           .select("*")
-          .eq("id", slug)
+          .eq("slug", slug)
           .maybeSingle();
 
         if (error) {
