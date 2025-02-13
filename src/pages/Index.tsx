@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { fetchCuratedSubmissions } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
@@ -110,6 +109,23 @@ const Index = () => {
     }
   };
 
+  // Transform CuratedSubmission[] to CsvRow[] for the DownloadMenu
+  const csvData = submissions?.map(submission => ({
+    Project: submission.Project || '',
+    Round: submission.Round || '',
+    Website: submission.Website || '',
+    Date: submission.Date || submission.created_at,
+    Amount: submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : '',
+    Valuation: submission.Valuation ? `$${submission.Valuation.toLocaleString()}` : '',
+    Category: submission.Category || '',
+    Tags: Array.isArray(submission.Tags) ? submission.Tags.join(', ') : '',
+    Lead_Investors: submission.lead_investor || submission.Lead_Investors || '',
+    Other_Investors: Array.isArray(submission.Other_Investors) ? submission.Other_Investors.join(', ') : '',
+    Description: submission.Description || '',
+    Announcement_Link: submission.Announcement_Link || '',
+    Social_Links: submission.Social_Links || ''
+  }));
+
   if (error) {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -176,8 +192,8 @@ const Index = () => {
                 </div>
               )}
             </div>
-            {submissions && submissions.length > 0 && (
-              <DownloadMenu submissions={submissions} />
+            {submissions && submissions.length > 0 && csvData && (
+              <DownloadMenu data={csvData} />
             )}
           </div>
           <div className="flex gap-4 mt-4">
