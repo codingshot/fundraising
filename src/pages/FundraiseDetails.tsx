@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,59 +11,69 @@ const FundraiseDetails = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const { data: fundraise, isLoading } = useQuery({
+  const { data: fundraise, isLoading, error: fundraiseError } = useQuery({
     queryKey: ["fundraise", slug],
     queryFn: async () => {
       console.log("Fetching fundraise with slug:", slug);
-      const { data, error } = await supabase
-        .from("processed_fundraises")
-        .select("*")
-        .eq("id", slug)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from("processed_fundraises")
+          .select("*")
+          .eq("id", slug)
+          .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching fundraise:", error);
+        if (error) {
+          console.error("Error fetching fundraise:", error);
+          throw error;
+        }
+        
+        console.log("Fetched fundraise:", data);
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch fundraise:", error);
         throw error;
       }
-      
-      console.log("Fetched fundraise:", data);
-      return data;
     },
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: relatedFundraises } = useQuery({
     queryKey: ["related-fundraises", fundraise?.id],
     enabled: !!fundraise,
     queryFn: async () => {
-      let orConditions = [];
-      
-      if (fundraise.name) {
-        orConditions.push(`name.eq.${fundraise.name}`);
-      }
-      
-      if (fundraise.amount_raised === null) {
-        orConditions.push(`amount_raised.is.null`);
-      } else if (fundraise.amount_raised !== undefined) {
-        orConditions.push(`amount_raised.eq.${fundraise.amount_raised}`);
-      }
-      
-      const orClause = orConditions.length > 0 ? orConditions.join(',') : 'id.neq.0';
-      
-      console.log("Fetching related fundraises with OR clause:", orClause);
-      
-      const { data, error } = await supabase
-        .from("processed_fundraises")
-        .select("*")
-        .neq("id", fundraise.id)
-        .or(orClause)
-        .limit(5);
+      try {
+        // Create a filter for similar fundraises
+        const query = supabase
+          .from("processed_fundraises")
+          .select("*")
+          .neq("id", fundraise.id)
+          .limit(5);
 
-      if (error) {
-        console.error("Error fetching related fundraises:", error);
-        throw error;
-      }
+        // Add name filter if available
+        if (fundraise.name) {
+          query.eq("name", fundraise.name);
+        }
 
-      return data;
+        // Add amount filter if available
+        if (fundraise.amount_raised === null) {
+          query.is("amount_raised", null);
+        } else if (typeof fundraise.amount_raised === "number") {
+          query.eq("amount_raised", fundraise.amount_raised);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error("Error fetching related fundraises:", error);
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch related fundraises:", error);
+        return [];
+      }
     },
   });
 
@@ -77,11 +88,14 @@ const FundraiseDetails = () => {
     );
   }
 
-  if (!fundraise) {
+  if (fundraiseError || !fundraise) {
     return (
       <div className="container mx-auto p-8">
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold">Fundraise not found</h2>
+          <p className="text-muted-foreground">
+            {fundraiseError ? "Error loading fundraise" : "The requested fundraise could not be found"}
+          </p>
           <Button onClick={() => navigate('/')} variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to home
