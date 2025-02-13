@@ -212,7 +212,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
           </div>
         )}
         <div className="mt-4 text-xs text-muted-foreground">
-          Added {formatDate(submission.Date || submission.created_at)}
+          {formatDate(submission.Date || submission.created_at)}
         </div>
       </CardContent>
     </Card>
