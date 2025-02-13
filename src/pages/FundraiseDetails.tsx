@@ -123,7 +123,7 @@ const FundraiseDetails = () => {
   const otherInvestors = fundraise.Other_Investors || fundraise.investors || [];
   const tags = fundraise.Tags || [];
   const round = fundraise.Round || fundraise.round_type;
-  const description = fundraise.Description || fundraise.description;
+  const description = fundraise.description;
 
   return (
     <div className="container mx-auto p-8 space-y-8">
