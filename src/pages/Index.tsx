@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { DownloadMenu } from "@/components/DownloadMenu";
-import { format } from "date-fns";
+import { NewsTicker } from "@/components/NewsTicker";
 
 const Index = () => {
   const { toast } = useToast();
@@ -18,8 +18,9 @@ const Index = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]); // 0 to 100M
+  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]);
   const [roundType, setRoundType] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const {
     data: submissions,
@@ -40,7 +41,6 @@ const Index = () => {
     },
   });
 
-  // Get top 3 fundraises of the month
   const getTopMonthlyRaises = () => {
     if (!submissions) return [];
     
@@ -110,6 +110,22 @@ const Index = () => {
     }
   };
 
+  const csvData = submissions?.map(submission => ({
+    Project: submission.Project || '',
+    Round: submission.Round || '',
+    Website: submission.Website || '',
+    Date: submission.Date || submission.created_at,
+    Amount: submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : '',
+    Valuation: submission.Valuation ? `$${submission.Valuation.toLocaleString()}` : '',
+    Category: submission.Category || '',
+    Tags: Array.isArray(submission.Tags) ? submission.Tags.join(', ') : '',
+    Lead_Investors: submission.lead_investor || submission.Lead_Investors || '',
+    Other_Investors: Array.isArray(submission.Other_Investors) ? submission.Other_Investors.join(', ') : '',
+    Description: submission.Description || '',
+    Announcement_Link: submission.Announcement_Link || '',
+    Social_Links: submission.Social_Links || ''
+  }));
+
   if (error) {
     return (
       <div className="min-h-screen bg-background p-6">
@@ -125,7 +141,6 @@ const Index = () => {
     );
   }
 
-  // Check if all entries are processed
   const hasUnprocessedEntries = submissions?.some(
     (submission) => !submission.amount_raised && !submission.round_type
   );
@@ -139,35 +154,46 @@ const Index = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
-              <p className="mt-2 text-muted-foreground">
-                A feed of all the latest crypto fundraising announcements.{" "}
-                <a
-                  href="https://t.me/cryptofundraises"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Telegram feed
-                </a>
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-muted-foreground">
+                  A feed of all the latest crypto fundraising announcements.{" "}
+                  <a
+                    href="https://t.me/cryptofundraises"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Telegram feed
+                  </a>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Total Fundraises: {submissions ? 
+                    <span className="font-medium text-foreground">{submissions.length.toLocaleString()}</span> 
+                    : 
+                    <span className="animate-pulse">Loading...</span>
+                  }
+                </p>
+              </div>
               
               {/* Top Monthly Raises Section */}
               {topRaises.length > 0 && (
                 <div className="mt-4 p-4 bg-accent/50 rounded-lg">
-                  <h2 className="text-lg font-semibold mb-3">Top Raises This Month</h2>
+                  <h2 className="text-lg font-semibold mb-3">
+                    Top Raises This Month ({topRaises.length})
+                  </h2>
                   <div className="grid gap-3">
                     {topRaises.map((raise, index) => (
                       <div key={raise.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-primary">{`#${index + 1}`}</span>
-                          <span className="font-medium">{raise.tweet_data?.author_name}</span>
+                          <span className="font-medium">{raise.tweet_data?.author_name || raise.Project}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm font-medium bg-primary/10 px-2 py-1 rounded">
-                            {raise.round_type}
+                            {raise.round_type || raise.Round}
                           </span>
                           <span className="font-semibold text-primary">
-                            ${raise.amount_raised?.toLocaleString()}
+                            ${(raise.amount_raised || raise.Amount)?.toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -176,8 +202,8 @@ const Index = () => {
                 </div>
               )}
             </div>
-            {submissions && submissions.length > 0 && (
-              <DownloadMenu submissions={submissions} />
+            {submissions && submissions.length > 0 && csvData && (
+              <DownloadMenu data={csvData} />
             )}
           </div>
           <div className="flex gap-4 mt-4">
@@ -201,17 +227,23 @@ const Index = () => {
         </div>
       </header>
 
+      <NewsTicker />
+
       <main className="container py-6">
-        <FilterBar 
-          timeFilter={timeFilter} 
-          onTimeFilterChange={setTimeFilter}
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          amountRange={amountRange}
-          onAmountRangeChange={setAmountRange}
-          roundType={roundType}
-          onRoundTypeChange={setRoundType}
-        />
+        <div className="mt-6">
+          <FilterBar 
+            timeFilter={timeFilter} 
+            onTimeFilterChange={setTimeFilter}
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+            amountRange={amountRange}
+            onAmountRangeChange={setAmountRange}
+            roundType={roundType}
+            onRoundTypeChange={setRoundType}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
+          />
+        </div>
         <ProjectGrid
           submissions={submissions || []}
           isLoading={isLoading}
@@ -228,3 +260,4 @@ const Index = () => {
 };
 
 export default Index;
+

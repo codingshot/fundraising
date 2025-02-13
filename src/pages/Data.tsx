@@ -11,6 +11,7 @@ const DataPage = () => {
   const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]);
   const [roundType, setRoundType] = useState("all");
   const [viewMode, setViewMode] = useState<'card' | 'row'>('row');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ["curatedSubmissions"],
@@ -30,6 +31,8 @@ const DataPage = () => {
         onAmountRangeChange={setAmountRange}
         roundType={roundType}
         onRoundTypeChange={setRoundType}
+        selectedCategories={selectedCategories}
+        onCategoriesChange={setSelectedCategories}
       />
 
       <ProjectGrid

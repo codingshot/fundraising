@@ -1,3 +1,4 @@
+
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
@@ -24,9 +25,18 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
     };
   }, []);
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking on links inside the card
+    if ((e.target as HTMLElement).tagName === 'A') {
+      e.stopPropagation();
+      return;
+    }
+    
     if (submission.slug) {
+      console.log("Navigating to:", `/fundraise/${submission.slug}`);
       navigate(`/fundraise/${submission.slug}`);
+    } else {
+      console.warn("No slug available for this fundraise");
     }
   };
 
@@ -36,28 +46,28 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
         <p className="font-medium text-muted-foreground">Amount</p>
         <div className="flex items-center gap-1">
           <DollarSign className="w-4 h-4 text-muted-foreground" />
-          <span>{submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : '-'}</span>
+          <span>{submission.Amount ? `$${submission.Amount.toLocaleString()}` : '-'}</span>
         </div>
       </div>
       <div className="space-y-1">
         <p className="font-medium text-muted-foreground">Company</p>
         <div className="flex items-center gap-1">
           <Building2 className="w-4 h-4 text-muted-foreground" />
-          <span>{submission.tweet_data?.author_name || '-'}</span>
+          <span>{submission.Project || '-'}</span>
         </div>
       </div>
       <div className="space-y-1">
         <p className="font-medium text-muted-foreground">Round</p>
         <div className="flex items-center gap-1">
           <Briefcase className="w-4 h-4 text-muted-foreground" />
-          <span>{submission.round_type || '-'}</span>
+          <span>{submission.Round || '-'}</span>
         </div>
       </div>
       <div className="space-y-1">
         <p className="font-medium text-muted-foreground">Lead</p>
         <div className="flex items-center gap-1">
           <Users className="w-4 h-4 text-muted-foreground" />
-          <span className="truncate">{submission.lead_investor || '-'}</span>
+          <span className="truncate">{submission.Lead_Investors || '-'}</span>
         </div>
       </div>
       <div className="space-y-1">
@@ -65,8 +75,8 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
         <div className="flex items-center gap-1">
           <Users className="w-4 h-4 text-muted-foreground" />
           <span className="truncate">
-            {submission.investors && submission.investors.length > 0 
-              ? submission.investors.filter(inv => inv !== submission.lead_investor).join(', ') 
+            {submission.Other_Investors && submission.Other_Investors.length > 0 
+              ? submission.Other_Investors.filter(inv => inv !== submission.Lead_Investors).join(', ') 
               : '-'}
           </span>
         </div>
@@ -79,30 +89,30 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
       <div className="flex items-center gap-2">
         <DollarSign className="w-4 h-4 text-muted-foreground" />
         <span className="font-semibold">Amount Raised:</span>
-        <span>{submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : 'Undisclosed'}</span>
+        <span>{submission.Amount ? `$${submission.Amount.toLocaleString()}` : 'Undisclosed'}</span>
       </div>
-      {submission.round_type && (
+      {submission.Round && (
         <div className="flex items-center gap-2">
           <Briefcase className="w-4 h-4 text-muted-foreground" />
           <span className="font-semibold">Round:</span>
-          <span>{submission.round_type}</span>
+          <span>{submission.Round}</span>
         </div>
       )}
-      {submission.lead_investor && (
+      {submission.Lead_Investors && (
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-muted-foreground" />
           <span className="font-semibold">Lead:</span>
-          <span>{submission.lead_investor}</span>
+          <span>{submission.Lead_Investors}</span>
         </div>
       )}
-      {submission.investors && submission.investors.length > 0 && (
+      {submission.Other_Investors && submission.Other_Investors.length > 0 && (
         <div className="flex items-start gap-2">
           <Users className="w-4 h-4 mt-1 text-muted-foreground" />
           <div>
             <span className="font-semibold">Other Investors:</span>
             <p className="mt-1">
-              {submission.investors
-                .filter(inv => inv !== submission.lead_investor)
+              {submission.Other_Investors
+                .filter(inv => inv !== submission.Lead_Investors)
                 .join(', ')}
             </p>
           </div>
@@ -124,33 +134,25 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
         onClick={handleCardClick}
       >
         <div className="flex items-center gap-4 mb-4">
-          <div className="flex-shrink-0">
-            {submission.tweet_data?.author_profile_image_url && (
-              <img
-                src={submission.tweet_data.author_profile_image_url}
-                alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            )}
-          </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">
-                {submission.tweet_data?.author_name || 'Unknown Author'}
+                {submission.Project || 'Unknown Project'}
               </h3>
-              {submission.tweet_data?.author_username && (
+              {submission.Website && (
                 <a
-                  href={`https://x.com/${submission.tweet_data.author_username}`}
+                  href={submission.Website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  @{submission.tweet_data.author_username}
+                  {new URL(submission.Website).hostname}
                 </a>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {formatDistanceToNow(new Date(submission.created_at), { addSuffix: true })}
+              {submission.Date ? formatDistanceToNow(new Date(submission.Date), { addSuffix: true }) : ''}
             </p>
           </div>
         </div>
@@ -165,26 +167,20 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
       onClick={handleCardClick}
     >
       <CardHeader className="flex flex-row items-center gap-4 p-4">
-        {submission.tweet_data?.author_profile_image_url && (
-          <img
-            src={submission.tweet_data.author_profile_image_url}
-            alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
-            className="w-12 h-12 rounded-full object-cover"
-          />
-        )}
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold">
-              {submission.tweet_data?.author_name || 'Unknown Author'}
+              {submission.Project || 'Unknown Project'}
             </h3>
-            {submission.tweet_data?.author_username && (
+            {submission.Website && (
               <a
-                href={`https://x.com/${submission.tweet_data.author_username}`}
+                href={submission.Website}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
+                onClick={(e) => e.stopPropagation()}
               >
-                @{submission.tweet_data.author_username}
+                {new URL(submission.Website).hostname}
               </a>
             )}
           </div>
@@ -198,13 +194,15 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
           </div>
         )}
         <div className="mb-4">{renderDetailedInfo()}</div>
-        <div className="mt-4">
-          <blockquote className="twitter-tweet" data-theme="light">
-            <a href={submission.tweet_url}>Loading tweet...</a>
-          </blockquote>
-        </div>
+        {submission.Announcement_Link && (
+          <div className="mt-4">
+            <blockquote className="twitter-tweet" data-theme="light">
+              <a href={submission.Announcement_Link}>Loading tweet...</a>
+            </blockquote>
+          </div>
+        )}
         <div className="mt-4 text-xs text-muted-foreground">
-          Added {formatDistanceToNow(new Date(submission.created_at), { addSuffix: true })}
+          Added {formatDistanceToNow(new Date(submission.Date || submission.created_at), { addSuffix: true })}
         </div>
       </CardContent>
     </Card>

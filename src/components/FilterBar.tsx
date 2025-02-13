@@ -1,4 +1,3 @@
-
 import {
   Select,
   SelectContent,
@@ -22,9 +21,11 @@ interface FilterBarProps {
   onSearchChange: (value: string) => void;
   onAmountRangeChange: (range: [number, number]) => void;
   onRoundTypeChange: (value: string) => void;
+  onCategoriesChange: (categories: string[]) => void;
   searchValue: string;
   amountRange: [number, number];
   roundType: string;
+  selectedCategories: string[];
 }
 
 const ROUND_TYPES = [
@@ -40,21 +41,46 @@ const ROUND_TYPES = [
   "Public",
 ];
 
+const CATEGORIES = [
+  "DeFi",
+  "Infrastructure",
+  "Gaming",
+  "NFT",
+  "DAO",
+  "Web3",
+  "Layer 1",
+  "Layer 2",
+  "Privacy",
+  "DeSci",
+  "AI",
+  "Social",
+  "Other"
+];
+
 export const FilterBar = ({
   timeFilter,
   onTimeFilterChange,
   onSearchChange,
   onAmountRangeChange,
   onRoundTypeChange,
+  onCategoriesChange,
   searchValue,
   amountRange,
   roundType,
+  selectedCategories,
 }: FilterBarProps) => {
   const [localAmountRange, setLocalAmountRange] = useState(amountRange);
 
   const handleAmountRangeChange = (value: number[]) => {
     setLocalAmountRange([value[0], value[1]]);
     onAmountRangeChange([value[0], value[1]]);
+  };
+
+  const toggleCategory = (category: string) => {
+    const newCategories = selectedCategories.includes(category)
+      ? selectedCategories.filter(c => c !== category)
+      : [...selectedCategories, category];
+    onCategoriesChange(newCategories);
   };
 
   return (
@@ -90,7 +116,7 @@ export const FilterBar = ({
           </SelectContent>
         </Select>
       </div>
-      <Accordion type="single" collapsible>
+      <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="amount-range">
           <AccordionTrigger>Amount Range</AccordionTrigger>
           <AccordionContent>
@@ -107,6 +133,26 @@ export const FilterBar = ({
                 <span>${(localAmountRange[0] / 1000000).toFixed(1)}M</span>
                 <span>${(localAmountRange[1] / 1000000).toFixed(1)}M</span>
               </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="categories">
+          <AccordionTrigger>Categories</AccordionTrigger>
+          <AccordionContent>
+            <div className="pt-4 flex flex-wrap gap-2">
+              {CATEGORIES.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedCategories.includes(category)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary hover:bg-secondary/80"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
           </AccordionContent>
         </AccordionItem>

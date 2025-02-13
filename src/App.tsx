@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import ApiDocs from "./pages/Docs";
 import DataPage from "./pages/Data";
 import FundraiseDetails from "./pages/FundraiseDetails";
+import CsvDebug from "./pages/CsvDebug";
 import Footer from "./components/Footer";
 import { NavigationMenu } from "./components/NavigationMenu";
 
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/docs" element={<ApiDocs />} />
               <Route path="/data" element={<DataPage />} />
+              <Route path="/csv" element={<CsvDebug />} />
               <Route path="/fundraise/:slug" element={<FundraiseDetails />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

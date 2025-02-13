@@ -7,52 +7,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { CuratedSubmission } from "@/types/project";
 
-interface DownloadMenuProps {
-  submissions: CuratedSubmission[];
+interface CsvRow {
+  Project: string;
+  Round: string;
+  Website: string;
+  Date: string;
+  Amount: string;
+  Valuation: string;
+  Category: string;
+  Tags: string;
+  Lead_Investors: string;
+  Other_Investors: string;
+  Description: string;
+  Announcement_Link: string;
+  Social_Links: string;
 }
 
-export const DownloadMenu = ({ submissions }: DownloadMenuProps) => {
-  const downloadAsJSON = () => {
-    const jsonString = JSON.stringify(submissions, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "crypto-fundraises.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+interface DownloadMenuProps {
+  data: CsvRow[];
+}
 
+export const DownloadMenu = ({ data }: DownloadMenuProps) => {
   const downloadAsCSV = () => {
-    const headers = [
-      "name",
-      "amount_raised",
-      "round_type",
-      "lead_investor",
-      "investors",
-      "token",
-      "tweet_url",
-      "announcement_username",
-      "created_at",
-    ];
-
+    const headers = Object.keys(data[0]);
     const csvRows = [
       headers.join(","),
-      ...submissions.map((s) =>
+      ...data.map((row) =>
         headers
           .map((header) => {
-            const value = s[header as keyof CuratedSubmission];
-            if (Array.isArray(value)) {
-              return `"${value.join("; ")}"`;
-            }
+            const value = row[header as keyof CsvRow];
             if (typeof value === "string" && value.includes(",")) {
               return `"${value}"`;
             }
-            return value || "";
+            return value;
           })
           .join(",")
       ),
@@ -61,44 +49,12 @@ export const DownloadMenu = ({ submissions }: DownloadMenuProps) => {
     const csvString = csvRows.join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "crypto-fundraises.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadAsMarkdown = () => {
-    const markdownContent = `# Crypto Fundraising Announcements\n\n` +
-      submissions.map((s) => {
-        const amount = s.amount_raised
-          ? `$${s.amount_raised.toLocaleString()}`
-          : "Undisclosed";
-        const investors = s.investors?.length
-          ? `\n\n**Investors**: ${s.investors.join(", ")}`
-          : "";
-        const leadInvestor = s.lead_investor
-          ? `\n\n**Lead**: ${s.lead_investor}`
-          : "";
-        const roundType = s.round_type ? `\n\n**Round**: ${s.round_type}` : "";
-        const token = s.token ? `\n\n**Token**: ${s.token}` : "";
-        const twitterLink = s.tweet_url
-          ? `\n\n🔗 [View Announcement](${s.tweet_url})`
-          : "";
-
-        return `## ${s.tweet_data?.author_name || 'Unknown'}\n\n**Amount Raised**: ${amount}${roundType}${leadInvestor}${investors}${token}${twitterLink}\n\n---\n`;
-      }).join("\n");
-
-    const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "crypto-fundraises.md";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "fundraising-data.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
@@ -111,14 +67,8 @@ export const DownloadMenu = ({ submissions }: DownloadMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={downloadAsJSON}>
-          Download as JSON
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={downloadAsCSV}>
           Download as CSV
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={downloadAsMarkdown}>
-          Download as Markdown
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
