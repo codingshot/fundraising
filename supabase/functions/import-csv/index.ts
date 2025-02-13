@@ -21,9 +21,11 @@ Deno.serve(async (req) => {
       throw new Error('Missing Supabase configuration');
     }
 
+    console.log('Starting CSV import process...');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // First clear the temporary table using TRUNCATE via RPC
+    console.log('Clearing temporary table...');
     const { error: clearError } = await supabase.rpc('truncate_temp_fundraises');
 
     if (clearError) {
@@ -31,6 +33,7 @@ Deno.serve(async (req) => {
     }
 
     // Fetch CSV file from public URL
+    console.log('Fetching CSV file...');
     const csvUrl = `${supabaseUrl}/storage/v1/object/public/public/cryptofundraises_cleaned.csv`;
     const response = await fetch(csvUrl);
     if (!response.ok) {
@@ -92,6 +95,7 @@ Deno.serve(async (req) => {
         };
       });
 
+      console.log(`Processing batch of ${batch.length} records...`);
       const { error: insertError } = await supabase
         .from('temp_fundraises')
         .insert(batchData);
@@ -106,6 +110,7 @@ Deno.serve(async (req) => {
     }
 
     // After all data is in temp table, run the migration function
+    console.log('Running migration function...');
     const { error: migrationError } = await supabase.rpc('migrate_fundraises');
     
     if (migrationError) {
@@ -113,6 +118,7 @@ Deno.serve(async (req) => {
     }
 
     // Get the total count of records in processed_fundraises
+    console.log('Getting final record count...');
     const { count, error: countError } = await supabase
       .from('processed_fundraises')
       .select('*', { count: 'exact', head: true });
@@ -121,16 +127,23 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to get count: ${countError.message}`);
     }
 
+    const result = {
+      status: 'success',
+      processed: processedCount,
+      errors: errorCount,
+      total_records: count,
+      message: `Successfully imported ${processedCount} records. Total records in database: ${count}`
+    };
+
+    console.log('Import completed:', result);
+
     return new Response(
-      JSON.stringify({
-        status: 'success',
-        processed: processedCount,
-        errors: errorCount,
-        total_records: count,
-        message: `Successfully imported ${processedCount} records. Total records in database: ${count}`
-      }),
+      JSON.stringify(result),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
       }
     );
 
