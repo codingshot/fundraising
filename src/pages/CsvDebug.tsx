@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,6 +39,7 @@ const CsvDebug = () => {
   const [timeFilter, setTimeFilter] = useState("all");
   const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]);
   const [roundType, setRoundType] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const itemsPerPage = 10;
 
   const { data: csvData, isLoading, error } = useQuery({
@@ -48,7 +48,6 @@ const CsvDebug = () => {
       const response = await fetch('/cryptofundraises_cleaned.csv');
       const text = await response.text();
       
-      // Parse CSV
       const rows = text.split('\n').slice(1); // Skip header row
       const parsedData: CsvRow[] = rows
         .filter(row => row.trim()) // Skip empty rows
@@ -74,6 +73,12 @@ const CsvDebug = () => {
       return parsedData;
     }
   });
+
+  const formatAmount = (amount: string) => {
+    const num = parseFloat(amount.replace(/[^0-9.-]+/g, ""));
+    if (isNaN(num)) return "";
+    return `$${num.toLocaleString()}`;
+  };
 
   const handleSort = (field: keyof CsvRow) => {
     if (field === sortField) {
@@ -106,7 +111,6 @@ const CsvDebug = () => {
       item.Lead_Investors.toLowerCase().includes(searchLower) ||
       item.Description.toLowerCase().includes(searchLower);
 
-    // Time filter
     const itemDate = new Date(item.Date);
     const now = new Date();
     let matchesTime = true;
@@ -118,18 +122,18 @@ const CsvDebug = () => {
       matchesTime = itemDate >= subDays(now, 30);
     }
 
-    // Amount filter
     const amount = parseFloat(item.Amount.replace(/[^0-9.-]+/g, "")) || 0;
     const matchesAmount = amount >= amountRange[0] && amount <= amountRange[1];
 
-    // Round type filter
     const matchesRound = roundType === "all" || 
       item.Round.toLowerCase() === roundType.toLowerCase();
 
-    return matchesSearch && matchesTime && matchesAmount && matchesRound;
+    const matchesCategory = selectedCategories.length === 0 || 
+      selectedCategories.includes(item.Category);
+
+    return matchesSearch && matchesTime && matchesAmount && matchesRound && matchesCategory;
   }) || [];
 
-  // Sort data
   const sortedData = [...filteredData].sort((a, b) => {
     const aValue = a[sortField] || '';
     const bValue = b[sortField] || '';
@@ -177,45 +181,50 @@ const CsvDebug = () => {
           onSearchChange={setSearchTerm}
           onAmountRangeChange={setAmountRange}
           onRoundTypeChange={setRoundType}
+          onCategoriesChange={setSelectedCategories}
           searchValue={searchTerm}
           amountRange={amountRange}
           roundType={roundType}
+          selectedCategories={selectedCategories}
         />
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead onClick={() => handleSort("Project")} className="cursor-pointer">
-                Project <ArrowUpDown className="inline h-4 w-4" />
-              </TableHead>
-              <TableHead onClick={() => handleSort("Round")} className="cursor-pointer">
-                Round <ArrowUpDown className="inline h-4 w-4" />
-              </TableHead>
-              <TableHead onClick={() => handleSort("Amount")} className="cursor-pointer">
-                Amount <ArrowUpDown className="inline h-4 w-4" />
-              </TableHead>
-              <TableHead onClick={() => handleSort("Date")} className="cursor-pointer">
-                Date <ArrowUpDown className="inline h-4 w-4" />
-              </TableHead>
-              <TableHead>Lead Investors</TableHead>
-              <TableHead>Category</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">{item.Project}</TableCell>
-                <TableCell>{item.Round}</TableCell>
-                <TableCell>{item.Amount}</TableCell>
-                <TableCell>{item.Date}</TableCell>
-                <TableCell>{item.Lead_Investors}</TableCell>
-                <TableCell>{item.Category}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="rounded-md border overflow-hidden">
+        <ScrollArea className="w-full" orientation="horizontal">
+          <div className="min-w-max">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {Object.keys(paginatedData[0] || {}).map((key) => (
+                    <TableHead 
+                      key={key}
+                      onClick={() => handleSort(key as keyof CsvRow)} 
+                      className="cursor-pointer whitespace-nowrap"
+                    >
+                      {key} <ArrowUpDown className="inline h-4 w-4" />
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((item, index) => (
+                  <TableRow key={index}>
+                    {Object.entries(item).map(([key, value]) => (
+                      <TableCell 
+                        key={key} 
+                        className="whitespace-nowrap"
+                      >
+                        {key === 'Amount' || key === 'Valuation' 
+                          ? formatAmount(value)
+                          : value}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </ScrollArea>
       </div>
 
       <div className="flex items-center justify-between mt-4">
