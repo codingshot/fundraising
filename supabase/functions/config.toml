@@ -1,4 +1,8 @@
 
 project_id = "zryhlwfkovkxtqiwzhai"
-[csv-one-time-import]
+[functions.fetch-telegram-feed]
+verify_jwt = false
+[functions.import-csv]
+verify_jwt = false
+[functions.process-existing-fundraises]
 verify_jwt = false
