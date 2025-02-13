@@ -37,7 +37,7 @@ export const NavigationMenu = () => {
                     : "text-foreground hover:bg-accent"
                 }`}
               >
-                CSV Debug
+                CSV
               </Link>
               <Link
                 to="/docs"
