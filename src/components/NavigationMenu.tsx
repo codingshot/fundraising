@@ -30,6 +30,16 @@ export const NavigationMenu = () => {
                 Fundraising Data
               </Link>
               <Link
+                to="/csv"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === "/csv"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-accent"
+                }`}
+              >
+                CSV Debug
+              </Link>
+              <Link
                 to="/docs"
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                   location.pathname === "/docs"
