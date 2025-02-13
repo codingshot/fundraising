@@ -10,7 +10,12 @@ export const NavigationMenu = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-xl font-bold">
+            <Link to="/" className="flex items-center gap-2 text-xl font-bold">
+              <img 
+                src="/lovable-uploads/454b69ec-0f29-4a39-8bc2-14cd2dad0ef5.png" 
+                alt="CryptoFundraise Logo" 
+                className="w-6 h-6" 
+              />
               CryptoFundraise
             </Link>
             <div className="hidden md:flex space-x-4">
