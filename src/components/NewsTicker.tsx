@@ -4,17 +4,21 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+
+type DataSource = 'database' | 'csv';
 
 export const NewsTicker = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [dataSource, setDataSource] = useState<DataSource>('csv');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: recentFundraises, isLoading } = useQuery({
-    queryKey: ["recent-fundraises"],
+    queryKey: ["recent-fundraises", dataSource],
     queryFn: async () => {
-      console.log("Fetching recent fundraises for ticker...");
+      console.log(`Fetching recent fundraises from ${dataSource}...`);
       const { data, error } = await supabase
-        .from('processed_fundraises')
+        .from(dataSource === 'database' ? 'processed_fundraises' : 'temp_fundraises')
         .select('*')
         .order('Date', { ascending: false })
         .limit(10);
@@ -63,7 +67,20 @@ export const NewsTicker = () => {
         `}
       </style>
       <div className="bg-accent/50 py-2 overflow-hidden border-b">
-        <div className="relative flex whitespace-nowrap">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Data source:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">CSV</span>
+              <Switch 
+                checked={dataSource === 'database'}
+                onCheckedChange={(checked) => setDataSource(checked ? 'database' : 'csv')}
+              />
+              <span className="text-sm">Database</span>
+            </div>
+          </div>
+        </div>
+        <div className="relative flex whitespace-nowrap mt-2">
           <div 
             ref={scrollRef}
             className="ticker-scroll inline-flex items-center gap-8 px-4"
