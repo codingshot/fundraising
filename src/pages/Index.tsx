@@ -41,6 +41,23 @@ const Index = () => {
     },
   });
 
+  // Transform submissions data for CSV download
+  const csvData = submissions?.map(submission => ({
+    Project: submission.Project || '',
+    Round: submission.Round || '',
+    Website: submission.Website || '',
+    Date: submission.Date || submission.created_at,
+    Amount: submission.Amount ? `$${submission.Amount.toLocaleString()}` : '',
+    Valuation: submission.Valuation ? `$${submission.Valuation.toLocaleString()}` : '',
+    Category: submission.Category || '',
+    Tags: Array.isArray(submission.Tags) ? submission.Tags.join(', ') : '',
+    Lead_Investors: submission.Lead_Investors || '',
+    Other_Investors: Array.isArray(submission.Other_Investors) ? submission.Other_Investors.join(', ') : '',
+    Description: submission.Description || '',
+    Announcement_Link: submission.Announcement_Link || '',
+    Social_Links: submission.Social_Links || ''
+  }));
+
   const getTopMonthlyRaises = () => {
     if (!submissions) return [];
     
