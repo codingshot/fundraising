@@ -201,8 +201,9 @@ const Index = () => {
         </div>
       </header>
 
+      <NewsTicker />
+
       <main className="container py-6">
-        <NewsTicker />
         <div className="mt-6">
           <FilterBar 
             timeFilter={timeFilter} 
