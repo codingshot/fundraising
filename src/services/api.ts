@@ -85,8 +85,13 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
 
 export async function importCsvData() {
   try {
-    console.log('CSV import is not implemented in this version');
-    return { message: 'CSV import is not available in this version' };
+    const { data, error } = await supabase.functions.invoke('direct-import');
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data;
   } catch (error) {
     console.error('Error:', error);
     throw error;
