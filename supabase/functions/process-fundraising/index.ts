@@ -84,7 +84,7 @@ serve(async (req) => {
 - Look for numbers followed by M, MM, million, B, billion, or USD
 - Convert written numbers to digits (e.g., "ten million" -> "10M")
 - For ranges, use the higher number
-- Keep original formatting in response (e.g., "10M", "1.5B")
+- Keep original formatting in response (e.g., "10M", "1.5B", "500K")
 - Include the amount even if it's mentioned in a thread or quoted
 - Examples:
   "$10M" or "10 million" -> "10M"
