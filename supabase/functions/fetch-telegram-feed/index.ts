@@ -13,11 +13,15 @@ Deno.serve(async (req) => {
 
   try {
     console.log('Fetching Telegram feed...')
-    const response = await fetch('https://t.me/s/cryptofundraises') // Updated to correct channel URL
+    const response = await fetch('https://t.me/s/cryptofundraises')
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
     const html = await response.text()
+    console.log('Received HTML length:', html.length)
 
-    // Updated regex patterns to match Telegram's HTML structure
-    const messagePattern = /<div class="tgme_widget_message_bubble">([\s\S]*?)<\/div>/g
+    // Updated regex patterns to be more specific to Telegram's HTML structure
+    const messagePattern = /<div class="tgme_widget_message_wrap[^"]*">[\s\S]*?<div class="tgme_widget_message[^"]*"[^>]*>([\s\S]*?)<\/div>/g
     const textPattern = /<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/
     const timePattern = /<time class="time" datetime="([^"]+)">/
 
@@ -49,12 +53,15 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(`Found ${posts.length} posts in total`)
+
     // Sort posts by timestamp (newest first) and take the most recent 10
     const recentPosts = posts
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 10)
 
-    console.log(`Found ${posts.length} posts, returning ${recentPosts.length} most recent`)
+    console.log(`Returning ${recentPosts.length} most recent posts`)
+    console.log('First post:', recentPosts[0])
     
     return new Response(JSON.stringify({ posts: recentPosts }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

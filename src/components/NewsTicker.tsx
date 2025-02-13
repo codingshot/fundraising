@@ -20,6 +20,7 @@ export const NewsTicker = () => {
       return data;
     },
     refetchInterval: 300000, // Refetch every 5 minutes
+    retry: 3, // Retry failed requests up to 3 times
   });
 
   useEffect(() => {
