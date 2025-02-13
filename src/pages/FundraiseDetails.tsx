@@ -49,8 +49,8 @@ const FundraiseDetails = () => {
           .neq("id", fundraise.id)
           .limit(5);
 
-        if (fundraise.Project) {
-          query.eq("Project", fundraise.Project);
+        if (fundraise.name) {
+          query.eq("name", fundraise.name);
         }
 
         if (fundraise.Amount === null) {
@@ -102,6 +102,8 @@ const FundraiseDetails = () => {
     );
   }
 
+  const projectName = fundraise.name || fundraise.Project || 'Unknown Project';
+
   return (
     <div className="container mx-auto p-8 space-y-8">
       <div className="flex items-center gap-4">
@@ -109,7 +111,7 @@ const FundraiseDetails = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to home
         </Button>
-        <h1 className="text-3xl font-bold">{fundraise.Project || 'Unknown Project'}</h1>
+        <h1 className="text-3xl font-bold">{projectName}</h1>
       </div>
       
       <div className="space-y-6">
@@ -196,7 +198,7 @@ const FundraiseDetails = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedFundraises.map((related) => (
                 <Card key={related.id} className="p-4">
-                  <h3 className="font-semibold">{related.Project || related.name}</h3>
+                  <h3 className="font-semibold">{related.name || related.Project}</h3>
                   <p className="text-sm text-muted-foreground">
                     {related.Amount ? `$${related.Amount.toLocaleString()}` : 'Undisclosed'}
                   </p>
