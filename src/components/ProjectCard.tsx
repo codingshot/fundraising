@@ -1,4 +1,3 @@
-
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
@@ -114,16 +113,12 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
       <div className="p-4 bg-card hover:bg-accent/50 transition-colors rounded-lg border">
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-shrink-0">
-            {submission.tweet_data?.author_profile_image_url ? (
+            {submission.tweet_data?.author_profile_image_url && (
               <img
                 src={submission.tweet_data.author_profile_image_url}
                 alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
                 className="w-12 h-12 rounded-full object-cover"
               />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <Twitter className="w-6 h-6" />
-              </div>
             )}
           </div>
           <div>
@@ -150,16 +145,12 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="flex flex-row items-center gap-4 p-4">
-        {submission.tweet_data?.author_profile_image_url ? (
+        {submission.tweet_data?.author_profile_image_url && (
           <img
             src={submission.tweet_data.author_profile_image_url}
             alt={`${submission.tweet_data.author_name || 'Author'}'s profile`}
             className="w-12 h-12 rounded-full object-cover"
           />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-            <Twitter className="w-6 h-6" />
-          </div>
         )}
         <div className="flex-1">
           <h3 className="text-lg font-semibold">
