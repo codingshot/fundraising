@@ -35,7 +35,7 @@ export const DownloadMenu = ({ submissions }: DownloadMenuProps) => {
       "lead_investor",
       "investors",
       "token",
-      "twitter_url",
+      "tweet_url",
       "announcement_username",
       "created_at",
     ];
@@ -84,11 +84,11 @@ export const DownloadMenu = ({ submissions }: DownloadMenuProps) => {
           : "";
         const roundType = s.round_type ? `\n\n**Round**: ${s.round_type}` : "";
         const token = s.token ? `\n\n**Token**: ${s.token}` : "";
-        const twitterLink = s.twitter_url
-          ? `\n\n🔗 [View Announcement](${s.twitter_url})`
+        const twitterLink = s.tweet_url
+          ? `\n\n🔗 [View Announcement](${s.tweet_url})`
           : "";
 
-        return `## ${s.name}\n\n**Amount Raised**: ${amount}${roundType}${leadInvestor}${investors}${token}${twitterLink}\n\n---\n`;
+        return `## ${s.tweet_data?.author_name || 'Unknown'}\n\n**Amount Raised**: ${amount}${roundType}${leadInvestor}${investors}${token}${twitterLink}\n\n---\n`;
       }).join("\n");
 
     const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8;" });
