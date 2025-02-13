@@ -106,6 +106,11 @@ const Index = () => {
     );
   }
 
+  // Check if all entries are processed
+  const hasUnprocessedEntries = submissions?.some(
+    (submission) => !submission.amount_raised && !submission.round_type
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -137,13 +142,15 @@ const Index = () => {
             >
               {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
             </button>
-            <button
-              onClick={handleProcessExisting}
-              disabled={isProcessing}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 disabled:opacity-50"
-            >
-              {isProcessing ? 'Processing...' : 'Process Existing Entries'}
-            </button>
+            {hasUnprocessedEntries && (
+              <button
+                onClick={handleProcessExisting}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 disabled:opacity-50"
+              >
+                {isProcessing ? 'Processing...' : 'Process Existing Entries'}
+              </button>
+            )}
           </div>
         </div>
       </header>
