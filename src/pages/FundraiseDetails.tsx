@@ -174,10 +174,10 @@ const FundraiseDetails = () => {
             </div>
           </div>
 
-          {fundraise.Description && (
+          {fundraise.description && (
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground">{fundraise.Description}</p>
+              <p className="text-muted-foreground">{fundraise.description}</p>
             </div>
           )}
 
