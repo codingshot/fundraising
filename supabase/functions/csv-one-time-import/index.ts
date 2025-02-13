@@ -2,16 +2,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { parse } from 'https://deno.land/std@0.181.0/csv/parse.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+// This function will run once when deployed
+Deno.serve(async () => {
   try {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -23,8 +15,13 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // First clear the temporary table using TRUNCATE via RPC
-    const { error: clearError } = await supabase.rpc('truncate_temp_fundraises');
+    console.log("Starting one-time CSV import...");
+
+    // Clear the temporary table first
+    const { error: clearError } = await supabase
+      .from('temp_fundraises')
+      .delete()
+      .neq('Project', 'DUMMY_VALUE');
 
     if (clearError) {
       throw new Error(`Failed to clear temporary table: ${clearError.message}`);
@@ -121,6 +118,8 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to get count: ${countError.message}`);
     }
 
+    console.log(`One-time import completed. Total records in database: ${count}`);
+
     return new Response(
       JSON.stringify({
         status: 'success',
@@ -130,7 +129,7 @@ Deno.serve(async (req) => {
         message: `Successfully imported ${processedCount} records. Total records in database: ${count}`
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
 
@@ -144,7 +143,7 @@ Deno.serve(async (req) => {
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }

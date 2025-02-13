@@ -1,14 +1,19 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
 
-Deno.serve(async (req) => {
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
 
   try {
@@ -55,8 +60,8 @@ Deno.serve(async (req) => {
       
       if (textMatch && timeMatch) {
         const text = textMatch[1]
-          .replace(/<br\/?>/g, '\n') // Replace <br> with newlines
-          .replace(/<[^>]+>/g, '') // Remove other HTML tags
+          .replace(/<br\/?>/g, '\n')
+          .replace(/<[^>]+>/g, '')
           .replace(/&amp;/g, '&')
           .replace(/&lt;/g, '<')
           .replace(/&gt;/g, '>')
@@ -70,40 +75,21 @@ Deno.serve(async (req) => {
         });
         
         console.log('Extracted post:', { text: text.substring(0, 100), timestamp: timeMatch[1] });
-      } else {
-        console.log('Failed to match text or time pattern:', { 
-          hasTextMatch: !!textMatch, 
-          hasTimeMatch: !!timeMatch 
-        });
       }
     }
 
     console.log(`Found ${posts.length} posts in total`);
-
-    if (posts.length === 0) {
-      console.error('No posts found in the HTML. Message pattern might need updating.');
-      // Log the full HTML for debugging (only in development)
-      console.log('Full HTML:', html);
-    }
 
     // Sort posts by timestamp (newest first) and take the most recent 10
     const recentPosts = posts
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 10);
 
-    console.log(`Returning ${recentPosts.length} most recent posts`);
-    if (recentPosts.length > 0) {
-      console.log('First post:', recentPosts[0]);
-    }
-    
     return new Response(JSON.stringify({ posts: recentPosts }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error fetching Telegram feed:', error);
-    if (error instanceof Error) {
-      console.error('Error stack:', error.stack);
-    }
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error occurred',
       posts: [] 

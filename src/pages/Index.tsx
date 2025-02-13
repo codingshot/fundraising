@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchCuratedSubmissions } from "@/services/api";
+import { fetchCuratedSubmissions, importCsvData } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
 import { FilterBar } from "@/components/FilterBar";
 import { useState } from "react";
@@ -41,43 +41,69 @@ const Index = () => {
     },
   });
 
+  // Transform submissions data for CSV download
+  const csvData = submissions?.map(submission => ({
+    Project: submission.Project || '',
+    Round: submission.Round || '',
+    Website: submission.Website || '',
+    Date: submission.Date || submission.created_at,
+    Amount: submission.Amount ? `$${submission.Amount.toLocaleString()}` : '',
+    Valuation: submission.Valuation ? `$${submission.Valuation.toLocaleString()}` : '',
+    Category: submission.Category || '',
+    Tags: Array.isArray(submission.Tags) ? submission.Tags.join(', ') : '',
+    Lead_Investors: submission.Lead_Investors || '',
+    Other_Investors: Array.isArray(submission.Other_Investors) ? submission.Other_Investors.join(', ') : '',
+    Description: submission.Description || '',
+    Announcement_Link: submission.Announcement_Link || '',
+    Social_Links: submission.Social_Links || ''
+  }));
+
   const getTopMonthlyRaises = () => {
     if (!submissions) return [];
     
     const now = new Date();
-    const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+    const oneMonthAgo = new Date(now);
+    oneMonthAgo.setMonth(now.getMonth() - 1);
     
     return submissions
       .filter(submission => {
-        const submissionDate = new Date(submission.created_at);
+        const submissionDate = new Date(submission.Date || submission.created_at);
+        console.log('Checking submission:', {
+          project: submission.Project,
+          date: submissionDate,
+          isThisMonth: submissionDate >= oneMonthAgo && submissionDate <= now,
+          amount: submission.amount_raised || submission.Amount
+        });
         return submissionDate >= oneMonthAgo && 
-               submission.amount_raised && 
-               submission.amount_raised > 0;
+               submissionDate <= now && 
+               (submission.amount_raised || submission.Amount) > 0;
       })
-      .sort((a, b) => (b.amount_raised || 0) - (a.amount_raised || 0))
+      .sort((a, b) => {
+        const amountA = a.amount_raised || a.Amount || 0;
+        const amountB = b.amount_raised || b.Amount || 0;
+        return amountB - amountA;
+      })
       .slice(0, 3);
   };
 
-  const handleFetchData = async () => {
+  const handleImportCsv = async () => {
     try {
       setIsFetching(true);
-      const { data, error } = await supabase.functions.invoke('fetch-submissions');
-      
-      if (error) throw error;
+      const result = await importCsvData();
       
       toast({
         title: "Success",
-        description: data.message,
+        description: result.message || "Successfully imported CSV data",
       });
       
       // Refetch the submissions to show new data
       refetch();
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error importing CSV:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to fetch new submissions",
+        description: error.message || "Failed to import CSV data",
       });
     } finally {
       setIsFetching(false);
@@ -93,7 +119,7 @@ const Index = () => {
       
       toast({
         title: "Success",
-        description: data.message,
+        description: data.message || "Successfully processed existing entries",
       });
       
       // Refetch to show updated data
@@ -103,28 +129,12 @@ const Index = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to process existing submissions",
+        description: error.message || "Failed to process existing entries",
       });
     } finally {
       setIsProcessing(false);
     }
   };
-
-  const csvData = submissions?.map(submission => ({
-    Project: submission.Project || '',
-    Round: submission.Round || '',
-    Website: submission.Website || '',
-    Date: submission.Date || submission.created_at,
-    Amount: submission.amount_raised ? `$${submission.amount_raised.toLocaleString()}` : '',
-    Valuation: submission.Valuation ? `$${submission.Valuation.toLocaleString()}` : '',
-    Category: submission.Category || '',
-    Tags: Array.isArray(submission.Tags) ? submission.Tags.join(', ') : '',
-    Lead_Investors: submission.lead_investor || submission.Lead_Investors || '',
-    Other_Investors: Array.isArray(submission.Other_Investors) ? submission.Other_Investors.join(', ') : '',
-    Description: submission.Description || '',
-    Announcement_Link: submission.Announcement_Link || '',
-    Social_Links: submission.Social_Links || ''
-  }));
 
   if (error) {
     return (
@@ -146,6 +156,7 @@ const Index = () => {
   );
 
   const topRaises = getTopMonthlyRaises();
+  console.log('Top raises this month:', topRaises);
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,13 +177,24 @@ const Index = () => {
                     Telegram feed
                   </a>
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  Total Fundraises: {submissions ? 
-                    <span className="font-medium text-foreground">{submissions.length.toLocaleString()}</span> 
-                    : 
-                    <span className="animate-pulse">Loading...</span>
-                  }
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Total Fundraises: {submissions ? 
+                      <span className="font-medium text-foreground">{submissions.length.toLocaleString()}</span> 
+                      : 
+                      <span className="animate-pulse">Loading...</span>
+                    }
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Last Updated: {submissions && submissions[0]?.Date ? 
+                      <span className="font-medium text-foreground">
+                        {new Date(submissions[0].Date).toLocaleDateString()}
+                      </span>
+                      : 
+                      <span className="animate-pulse">Loading...</span>
+                    }
+                  </p>
+                </div>
               </div>
               
               {/* Top Monthly Raises Section */}
@@ -186,14 +208,17 @@ const Index = () => {
                       <div key={raise.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-primary">{`#${index + 1}`}</span>
-                          <span className="font-medium">{raise.tweet_data?.author_name || raise.Project}</span>
+                          <span className="font-medium">{raise.Project || raise.tweet_data?.author_name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(raise.Date || raise.created_at).toLocaleDateString()}
+                          </span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm font-medium bg-primary/10 px-2 py-1 rounded">
-                            {raise.round_type || raise.Round}
+                            {raise.Round || raise.round_type}
                           </span>
                           <span className="font-semibold text-primary">
-                            ${(raise.amount_raised || raise.Amount)?.toLocaleString()}
+                            ${(raise.Amount || raise.amount_raised)?.toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -208,11 +233,11 @@ const Index = () => {
           </div>
           <div className="flex gap-4 mt-4">
             <button
-              onClick={handleFetchData}
+              onClick={handleImportCsv}
               disabled={isFetching}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
             >
-              {isFetching ? 'Fetching...' : 'Fetch New Submissions'}
+              {isFetching ? 'Importing...' : 'Import CSV Data'}
             </button>
             {hasUnprocessedEntries && (
               <button
@@ -260,4 +285,3 @@ const Index = () => {
 };
 
 export default Index;
-
