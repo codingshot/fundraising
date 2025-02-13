@@ -3,6 +3,3 @@ project_id = "zryhlwfkovkxtqiwzhai"
 [scheduled-fetch]
 schedule = "0 */12 * * *"  # Run every 12 hours
 verify_jwt = false
-
-[enrich-crypto-fundraising]
-verify_jwt = false
