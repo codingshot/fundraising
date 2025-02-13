@@ -3,9 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { DollarSign, Users, Building2, Briefcase, ArrowLeft, Globe, Calendar } from "lucide-react";
+import { 
+  DollarSign, 
+  Users, 
+  Building2, 
+  Briefcase, 
+  ArrowLeft, 
+  Globe, 
+  Calendar,
+  Link2,
+  Twitter,
+  Hash,
+  ChevronRight,
+  Gem,
+  Info
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const FundraiseDetails = () => {
   const { slug } = useParams();
@@ -103,6 +118,12 @@ const FundraiseDetails = () => {
   }
 
   const projectName = fundraise.name || fundraise.Project || 'Unknown Project';
+  const amount = fundraise.Amount || fundraise.amount_raised;
+  const leadInvestor = fundraise.Lead_Investors || fundraise.lead_investor;
+  const otherInvestors = fundraise.Other_Investors || fundraise.investors || [];
+  const tags = fundraise.Tags || [];
+  const round = fundraise.Round || fundraise.round_type;
+  const description = fundraise.Description || fundraise.description;
 
   return (
     <div className="container mx-auto p-8 space-y-8">
@@ -114,120 +135,170 @@ const FundraiseDetails = () => {
           </Button>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex-1 flex items-center gap-4">
-            <h1 className="text-3xl font-bold">{projectName}</h1>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 flex items-center gap-4">
+              <h1 className="text-3xl font-bold">{projectName}</h1>
+              {fundraise.Website && (
+                <Avatar className="h-10 w-10">
+                  <img
+                    src={`https://www.google.com/s2/favicons?domain=${fundraise.Website}&sz=64`}
+                    alt={projectName}
+                    className="rounded-full"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </Avatar>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-4">
+            {round && (
+              <Badge variant="secondary" className="text-sm">
+                {round}
+              </Badge>
+            )}
+            {amount && (
+              <Badge variant="secondary" className="text-sm">
+                ${amount.toLocaleString()}
+              </Badge>
+            )}
+            {fundraise.Category && (
+              <Badge variant="outline" className="text-sm">
+                {fundraise.Category}
+              </Badge>
+            )}
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
             {fundraise.Website && (
-              <Avatar className="h-10 w-10">
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${fundraise.Website}&sz=64`}
-                  alt={projectName}
-                  className="rounded-full"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </Avatar>
+              <Button variant="outline" size="sm" asChild>
+                <a href={fundraise.Website} target="_blank" rel="noopener noreferrer">
+                  <Globe className="mr-2 h-4 w-4" />
+                  Website
+                </a>
+              </Button>
+            )}
+            {fundraise.Social_Links && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={fundraise.Social_Links} target="_blank" rel="noopener noreferrer">
+                  <Link2 className="mr-2 h-4 w-4" />
+                  Social
+                </a>
+              </Button>
+            )}
+            {fundraise.Announcement_Link && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={fundraise.Announcement_Link} target="_blank" rel="noopener noreferrer">
+                  <Twitter className="mr-2 h-4 w-4" />
+                  Announcement
+                </a>
+              </Button>
             )}
           </div>
-          {fundraise.Website && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={fundraise.Website} target="_blank" rel="noopener noreferrer">
-                <Globe className="mr-2 h-4 w-4" />
-                Visit Website
-              </a>
-            </Button>
-          )}
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Fundraising Details</h2>
+        <Card className="p-6 space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-muted-foreground" />
-              <span className="font-semibold">Amount Raised:</span>
-              <span>{fundraise.Amount ? `$${fundraise.Amount.toLocaleString()}` : 'Undisclosed'}</span>
-            </div>
+            <h2 className="text-xl font-semibold">Fundraising Details</h2>
             
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
-              <span className="font-semibold">Date:</span>
-              <span>{new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}</span>
-            </div>
-            
-            {fundraise.Round && (
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-muted-foreground" />
-                <span className="font-semibold">Round:</span>
-                <span>{fundraise.Round}</span>
-              </div>
-            )}
-
-            {fundraise.Lead_Investors && (
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-muted-foreground" />
-                <span className="font-semibold">Lead Investor:</span>
-                <span>{fundraise.Lead_Investors}</span>
-              </div>
-            )}
-
-            {fundraise.Category && (
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-muted-foreground" />
-                <span className="font-semibold">Category:</span>
-                <span>{fundraise.Category}</span>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        <Card className="p-6 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-          <div className="space-y-4">
-            {fundraise.Other_Investors && fundraise.Other_Investors.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Other Investors</h3>
-                <ul className="list-disc list-inside space-y-1">
-                  {fundraise.Other_Investors.map((investor, index) => (
-                    <li key={index}>{investor}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {fundraise.Tags && fundraise.Tags.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {fundraise.Tags.map((tag, index) => (
-                    <span key={index} className="px-2 py-1 bg-accent rounded-md text-sm">
-                      {tag}
-                    </span>
-                  ))}
+            <div className="grid gap-4">
+              {amount && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Amount Raised:</span>
+                  <span>${amount.toLocaleString()}</span>
                 </div>
-              </div>
-            )}
+              )}
+              
+              {fundraise.Valuation && (
+                <div className="flex items-center gap-2">
+                  <Gem className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Valuation:</span>
+                  <span>${fundraise.Valuation.toLocaleString()}</span>
+                </div>
+              )}
+              
+              {round && (
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Round:</span>
+                  <span>{round}</span>
+                </div>
+              )}
 
-            {fundraise.description && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground">{fundraise.description}</p>
-              </div>
-            )}
+              {leadInvestor && (
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Lead Investor:</span>
+                  <span>{leadInvestor}</span>
+                </div>
+              )}
+
+              {fundraise.Category && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Category:</span>
+                  <span>{fundraise.Category}</span>
+                </div>
+              )}
+
+              {fundraise.token && (
+                <div className="flex items-center gap-2">
+                  <Hash className="w-5 h-5 text-muted-foreground" />
+                  <span className="font-semibold">Token:</span>
+                  <span>{fundraise.token}</span>
+                </div>
+              )}
+            </div>
           </div>
+
+          {otherInvestors.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Other Investors</h3>
+              <div className="flex flex-wrap gap-2">
+                {otherInvestors.map((investor, index) => (
+                  <Badge key={index} variant="outline">
+                    {investor}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </Card>
 
-        {fundraise.Announcement_Link && (
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Announcement</h2>
-            <blockquote className="twitter-tweet" data-theme="light">
-              <a href={fundraise.Announcement_Link}>Loading tweet...</a>
-            </blockquote>
-          </Card>
-        )}
+        <Card className="p-6 space-y-6">
+          {description && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Description</h2>
+              <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
+            </div>
+          )}
+
+          {tags.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
       </div>
 
       {relatedFundraises && relatedFundraises.length > 0 && (
