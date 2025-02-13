@@ -1,3 +1,4 @@
+
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
@@ -25,8 +26,11 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
   }, []);
 
   const handleCardClick = () => {
+    console.log("Handling card click, slug:", submission.slug);
     if (submission.slug) {
-      navigate(`/fundraise/${submission.slug}`);
+      const formattedSlug = submission.slug.trim().toLowerCase();
+      console.log("Navigating to:", `/fundraise/${formattedSlug}`);
+      navigate(`/fundraise/${formattedSlug}`);
     }
   };
 
@@ -144,6 +148,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary"
+                  onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
                 >
                   @{submission.tweet_data.author_username}
                 </a>
@@ -183,6 +188,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
+                onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
               >
                 @{submission.tweet_data.author_username}
               </a>
