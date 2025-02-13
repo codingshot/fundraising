@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import ApiDocs from "./pages/Docs";
 import DataPage from "./pages/Data";
 import Footer from "./components/Footer";
+import { NavigationMenu } from "./components/NavigationMenu";
 
 const queryClient = new QueryClient();
 
@@ -19,15 +20,18 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/docs" element={<ApiDocs />} />
-            <Route path="/data" element={<DataPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <NavigationMenu />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/docs" element={<ApiDocs />} />
+              <Route path="/data" element={<DataPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
         </BrowserRouter>
-        <Footer />
       </div>
     </TooltipProvider>
   </QueryClientProvider>
