@@ -1,3 +1,4 @@
+
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
@@ -32,8 +33,10 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
     }
     
     if (submission.id) {
-      console.log("Navigating to:", `/fundraise/id/${submission.id}`);
-      navigate(`/fundraise/id/${submission.id}`);
+      // Convert the ID to a URL-friendly slug
+      const slug = submission.id.toString();
+      console.log("Navigating to:", `/fundraise/${slug}`);
+      navigate(`/fundraise/${slug}`);
     } else {
       console.warn("No ID available for this fundraise");
     }
