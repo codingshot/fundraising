@@ -1,11 +1,12 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight } from "lucide-react";
 
 export const NewsTicker = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: recentFundraises, isLoading } = useQuery({
     queryKey: ["recent-fundraises"],
@@ -44,26 +45,38 @@ export const NewsTicker = () => {
   const currentFundraise = recentFundraises[currentIndex];
 
   return (
-    <div className="bg-accent/50 py-2 px-4 overflow-hidden border-b animate-fade-in">
-      <div className="container mx-auto flex items-center gap-2">
-        <div className="flex-shrink-0 font-semibold text-sm text-primary">
-          Recent Fundraise
+    <div className="bg-accent/50 py-2 overflow-hidden border-b">
+      <div className="relative flex whitespace-nowrap">
+        <div 
+          ref={scrollRef}
+          className="animate-scroll inline-flex items-center gap-8 px-4"
+          style={{
+            willChange: 'transform',
+          }}
+        >
+          {/* Duplicate items for seamless loop */}
+          {[...Array(2)].map((_, arrayIndex) => (
+            <div key={arrayIndex} className="inline-flex items-center gap-8">
+              {recentFundraises.map((fundraise, index) => (
+                <div key={`${arrayIndex}-${index}`} className="inline-flex items-center gap-4 shrink-0">
+                  <span className="font-medium whitespace-nowrap">
+                    {fundraise.name || fundraise.Project}
+                  </span>
+                  <span className="text-sm text-primary font-semibold whitespace-nowrap">
+                    {fundraise.Round || 'Seed'}
+                  </span>
+                  <span className="text-emerald-500 font-semibold whitespace-nowrap">
+                    ${fundraise.Amount?.toLocaleString() || 'Undisclosed'}
+                  </span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}
+                  </span>
+                  <ArrowRight className="h-4 w-4 text-primary shrink-0" />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
-        <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
-        <div className="flex items-center gap-4 truncate">
-          <span className="font-medium">
-            {currentFundraise.name || currentFundraise.Project}
-          </span>
-          <span className="text-sm text-primary font-semibold">
-            {currentFundraise.Round || 'Seed'}
-          </span>
-          <span className="text-emerald-500 font-semibold">
-            ${currentFundraise.Amount?.toLocaleString() || 'Undisclosed'}
-          </span>
-        </div>
-        <span className="text-xs text-muted-foreground flex-shrink-0">
-          {new Date(currentFundraise.Date || currentFundraise.created_at).toLocaleDateString()}
-        </span>
       </div>
     </div>
   );
