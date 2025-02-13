@@ -2,7 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Image as ImageIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const NewsTicker = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -74,19 +75,43 @@ export const NewsTicker = () => {
             {[...Array(2)].map((_, arrayIndex) => (
               <div key={arrayIndex} className="inline-flex items-center gap-8">
                 {recentFundraises.map((fundraise, index) => (
-                  <div key={`${arrayIndex}-${index}`} className="inline-flex items-center gap-4 shrink-0">
+                  <div 
+                    key={`${arrayIndex}-${index}`} 
+                    className="inline-flex items-center gap-4 shrink-0"
+                  >
+                    {/* Project Image/Icon */}
+                    {fundraise.Website && (
+                      <img
+                        src={`https://www.google.com/s2/favicons?domain=${fundraise.Website}&sz=32`}
+                        alt=""
+                        className="w-4 h-4 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    
                     <span className="font-medium whitespace-nowrap">
                       {fundraise.name || fundraise.Project}
                     </span>
-                    <span className="text-sm text-primary font-semibold whitespace-nowrap">
-                      {fundraise.Round || 'Seed'}
-                    </span>
+                    
+                    {/* Round Type in Pill Format */}
+                    <Badge 
+                      variant="secondary"
+                      className="h-5 px-2 text-xs font-medium"
+                    >
+                      {fundraise.Round || fundraise.round_type || 'Seed'}
+                    </Badge>
+                    
                     <span className="text-emerald-500 font-semibold whitespace-nowrap">
                       ${(fundraise.amount_raised || fundraise.Amount)?.toLocaleString() || 'Undisclosed'}
                     </span>
+                    
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}
                     </span>
+                    
                     <ArrowRight className="h-4 w-4 text-primary shrink-0" />
                   </div>
                 ))}
