@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchCuratedSubmissions } from "@/services/api";
 import { ProjectGrid } from "@/components/ProjectGrid";
@@ -153,35 +154,46 @@ const Index = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
-              <p className="mt-2 text-muted-foreground">
-                A feed of all the latest crypto fundraising announcements.{" "}
-                <a
-                  href="https://t.me/cryptofundraises"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Telegram feed
-                </a>
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-muted-foreground">
+                  A feed of all the latest crypto fundraising announcements.{" "}
+                  <a
+                    href="https://t.me/cryptofundraises"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Telegram feed
+                  </a>
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Total Fundraises: {submissions ? 
+                    <span className="font-medium text-foreground">{submissions.length.toLocaleString()}</span> 
+                    : 
+                    <span className="animate-pulse">Loading...</span>
+                  }
+                </p>
+              </div>
               
               {/* Top Monthly Raises Section */}
               {topRaises.length > 0 && (
                 <div className="mt-4 p-4 bg-accent/50 rounded-lg">
-                  <h2 className="text-lg font-semibold mb-3">Top Raises This Month</h2>
+                  <h2 className="text-lg font-semibold mb-3">
+                    Top Raises This Month ({topRaises.length})
+                  </h2>
                   <div className="grid gap-3">
                     {topRaises.map((raise, index) => (
                       <div key={raise.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-primary">{`#${index + 1}`}</span>
-                          <span className="font-medium">{raise.tweet_data?.author_name}</span>
+                          <span className="font-medium">{raise.tweet_data?.author_name || raise.Project}</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-sm font-medium bg-primary/10 px-2 py-1 rounded">
-                            {raise.round_type}
+                            {raise.round_type || raise.Round}
                           </span>
                           <span className="font-semibold text-primary">
-                            ${raise.amount_raised?.toLocaleString()}
+                            ${(raise.amount_raised || raise.Amount)?.toLocaleString()}
                           </span>
                         </div>
                       </div>
@@ -248,3 +260,4 @@ const Index = () => {
 };
 
 export default Index;
+

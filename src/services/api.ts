@@ -20,11 +20,11 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       return [];
     }
     
-    console.log("Raw data from database:", data);
+    console.log(`Found ${data.length} fundraises in the database`);
+    console.log("Sample entry:", data[0]);
     
     // Transform to match CuratedSubmission type
     const transformedData = data.map(item => {
-      console.log("Processing item:", item);
       return {
         id: item.id,
         tweet_url: item.twitter_url,
@@ -81,8 +81,8 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       };
     });
     
-    console.log("Transformed data length:", transformedData.length);
-    console.log("First transformed item:", transformedData[0]);
+    console.log("Data transformation completed");
+    console.log(`Transformed ${transformedData.length} entries`);
     return transformedData;
   } catch (error) {
     console.error("Error fetching submissions:", error);
