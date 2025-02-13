@@ -8,18 +8,18 @@ import { DollarSign, Users, Building2, Briefcase, ArrowLeft } from "lucide-react
 import { Button } from "@/components/ui/button";
 
 const FundraiseDetails = () => {
-  const { slug } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: fundraise, isLoading, error: fundraiseError } = useQuery({
-    queryKey: ["fundraise", slug],
+    queryKey: ["fundraise", id],
     queryFn: async () => {
-      console.log("Fetching fundraise with slug:", slug);
+      console.log("Fetching fundraise with id:", id);
       try {
         const { data, error } = await supabase
           .from("processed_fundraises")
           .select("*")
-          .eq("id", slug)
+          .eq("id", id)
           .maybeSingle();
 
         if (error) {
