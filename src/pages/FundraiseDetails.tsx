@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,14 +34,34 @@ const FundraiseDetails = () => {
     queryKey: ["related-fundraises", fundraise?.id],
     enabled: !!fundraise,
     queryFn: async () => {
+      let orConditions = [];
+      
+      if (fundraise.name) {
+        orConditions.push(`name.eq.${fundraise.name}`);
+      }
+      
+      if (fundraise.amount_raised === null) {
+        orConditions.push(`amount_raised.is.null`);
+      } else if (fundraise.amount_raised !== undefined) {
+        orConditions.push(`amount_raised.eq.${fundraise.amount_raised}`);
+      }
+      
+      const orClause = orConditions.length > 0 ? orConditions.join(',') : 'id.neq.0';
+      
+      console.log("Fetching related fundraises with OR clause:", orClause);
+      
       const { data, error } = await supabase
         .from("processed_fundraises")
         .select("*")
         .neq("id", fundraise.id)
-        .or(`name.eq.${fundraise.name},amount_raised.eq.${fundraise.amount_raised}`)
+        .or(orClause)
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching related fundraises:", error);
+        throw error;
+      }
+
       return data;
     },
   });
