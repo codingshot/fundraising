@@ -26,11 +26,11 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
   }, []);
 
   const handleCardClick = () => {
-    console.log("Handling card click, slug:", submission.slug);
     if (submission.slug) {
-      const formattedSlug = submission.slug.trim().toLowerCase();
-      console.log("Navigating to:", `/fundraise/${formattedSlug}`);
-      navigate(`/fundraise/${formattedSlug}`);
+      console.log("Navigating to:", `/fundraise/${submission.slug}`);
+      navigate(`/fundraise/${submission.slug}`);
+    } else {
+      console.warn("No slug available for this fundraise");
     }
   };
 
@@ -148,7 +148,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary"
-                  onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
+                  onClick={(e) => e.stopPropagation()}
                 >
                   @{submission.tweet_data.author_username}
                 </a>
@@ -188,7 +188,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary"
-                onClick={(e) => e.stopPropagation()} // Prevent card click when clicking the link
+                onClick={(e) => e.stopPropagation()}
               >
                 @{submission.tweet_data.author_username}
               </a>
