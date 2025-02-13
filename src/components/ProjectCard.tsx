@@ -25,12 +25,20 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
     };
   }, []);
 
-  const handleCardClick = () => {
-    if (submission.slug) {
-      console.log("Navigating to:", `/fundraise/${submission.slug}`);
-      navigate(`/fundraise/${submission.slug}`);
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent navigation if clicking on links inside the card
+    if ((e.target as HTMLElement).tagName === 'A') {
+      e.stopPropagation();
+      return;
+    }
+    
+    if (submission.id) {
+      // Convert the ID to a URL-friendly slug
+      const slug = submission.id.toString();
+      console.log("Navigating to:", `/fundraise/${slug}`);
+      navigate(`/fundraise/${slug}`);
     } else {
-      console.warn("No slug available for this fundraise");
+      console.warn("No ID available for this fundraise");
     }
   };
 

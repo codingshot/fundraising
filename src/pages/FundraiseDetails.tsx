@@ -1,24 +1,31 @@
-
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { DollarSign, Users, Building2, Briefcase } from "lucide-react";
+import { DollarSign, Users, Building2, Briefcase, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const FundraiseDetails = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const { data: fundraise, isLoading } = useQuery({
     queryKey: ["fundraise", slug],
     queryFn: async () => {
+      console.log("Fetching fundraise with slug:", slug);
       const { data, error } = await supabase
         .from("processed_fundraises")
         .select("*")
-        .eq("slug", slug)
+        .eq("id", slug)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching fundraise:", error);
+        throw error;
+      }
+      
+      console.log("Fetched fundraise:", data);
       return data;
     },
   });
@@ -40,15 +47,40 @@ const FundraiseDetails = () => {
   });
 
   if (isLoading) {
-    return <div className="p-8">Loading...</div>;
+    return (
+      <div className="container mx-auto p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-accent/50 rounded w-1/3"></div>
+          <div className="h-64 bg-accent/50 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!fundraise) {
-    return <div className="p-8">Fundraise not found</div>;
+    return (
+      <div className="container mx-auto p-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Fundraise not found</h2>
+          <Button onClick={() => navigate('/')} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to home
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto p-8 space-y-8">
+      <div className="flex items-center gap-4">
+        <Button onClick={() => navigate('/')} variant="outline" size="sm">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to home
+        </Button>
+        <h1 className="text-3xl font-bold">{fundraise.tweet_data?.author_name || 'Unknown Project'}</h1>
+      </div>
+      
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">{fundraise.name}</h1>
         
