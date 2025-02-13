@@ -6,9 +6,9 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
   try {
     console.log("Starting to fetch fundraising data from database");
     const { data, error } = await supabase
-      .from('fundraising_data')
+      .from('processed_fundraises')
       .select('*')
-      .order('date', { ascending: false }); 
+      .order('Date', { ascending: false }); 
     
     if (error) {
       console.error("Database error:", error);
@@ -22,9 +22,9 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
     
     console.log(`Found ${data.length} fundraises in the database`);
     console.log("Sample entries:", data.slice(0, 3).map(item => ({
-      project: item.project_name,
-      date: item.date,
-      amount: item.amount,
+      project: item.name,
+      date: item.Date,
+      amount: item.amount_raised,
       round: item.round_type
     })));
     
@@ -36,20 +36,20 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
       created_at: item.created_at,
       tweet_data: {
         text: item.description,
-        author_name: item.project_name,
+        author_name: item.name,
       },
       tweetId: null,
       username: null,
       content: item.description,
       curatorNotes: `Round: ${item.round_type || 'Undisclosed'}\n` +
-                    `Amount: $${item.amount ? item.amount.toLocaleString() : 'Undisclosed'}\n` +
+                    `Amount: $${item.amount_raised ? item.amount_raised.toLocaleString() : 'Undisclosed'}\n` +
                     `Lead: ${item.lead_investor || 'Undisclosed'}\n` +
-                    `Investors: ${item.other_investors ? item.other_investors.join(', ') : 'Undisclosed'}`,
+                    `Investors: ${item.investors ? item.investors.join(', ') : 'Undisclosed'}`,
       userId: "system",
       curatorId: "system",
       curatorUsername: "CryptoFundraises",
       curatorTweetId: null,
-      submittedAt: item.date,
+      submittedAt: item.Date,
       moderationHistory: [{
         tweetId: null,
         feedId: "cryptofundraises",
@@ -60,18 +60,18 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
         moderationResponseTweetId: null
       }],
       moderationResponseTweetId: null,
-      amount_raised: item.amount,
+      amount_raised: item.amount_raised,
       round_type: item.round_type,
       lead_investor: item.lead_investor,
-      investors: item.other_investors || [],
-      Project: item.project_name,
+      investors: item.investors || [],
+      Project: item.name,
       Round: item.round_type,
-      Website: item.website,
-      Date: item.date,
-      Amount: item.amount,
+      Website: item.Website,
+      Date: item.Date,
+      Amount: item.amount_raised,
       Description: item.description,
-      Tags: [],
-      slug: item.project_name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      Tags: item.Tags || [],
+      slug: item.slug
     }));
     
     console.log("Data transformation completed");
