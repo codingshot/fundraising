@@ -2,7 +2,7 @@
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInYears, format } from "date-fns";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -38,6 +38,16 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
     } else {
       console.warn("No slug available for this fundraise");
     }
+  };
+
+  const formatDate = (date: string | Date) => {
+    const dateObj = new Date(date);
+    const yearsAgo = differenceInYears(new Date(), dateObj);
+    
+    if (yearsAgo >= 1) {
+      return format(dateObj, 'MMMM d, yyyy');
+    }
+    return formatDistanceToNow(dateObj, { addSuffix: true });
   };
 
   const renderCompactInfo = () => (
@@ -152,7 +162,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {submission.Date ? formatDistanceToNow(new Date(submission.Date), { addSuffix: true }) : ''}
+              {submission.Date ? formatDate(submission.Date) : ''}
             </p>
           </div>
         </div>
@@ -202,7 +212,7 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
           </div>
         )}
         <div className="mt-4 text-xs text-muted-foreground">
-          Added {formatDistanceToNow(new Date(submission.Date || submission.created_at), { addSuffix: true })}
+          Added {formatDate(submission.Date || submission.created_at)}
         </div>
       </CardContent>
     </Card>
