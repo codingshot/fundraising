@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
+import { Send } from "lucide-react";
 
 export const NavigationMenu = () => {
   const location = useLocation();
@@ -42,7 +42,7 @@ export const NavigationMenu = () => {
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
-            <MessageCircle className="h-5 w-5" />
+            <Send className="h-5 w-5 rotate-45" />
           </a>
         </div>
       </div>
