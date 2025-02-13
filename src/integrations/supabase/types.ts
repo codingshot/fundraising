@@ -1063,6 +1063,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      process_csv_fundraises: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       slugify: {
         Args: {
           "": string
