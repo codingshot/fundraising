@@ -17,8 +17,9 @@ const Index = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]); // 0 to 100M
+  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]);
   const [roundType, setRoundType] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const {
     data: submissions,
@@ -39,7 +40,6 @@ const Index = () => {
     },
   });
 
-  // Get top 3 fundraises of the month
   const getTopMonthlyRaises = () => {
     if (!submissions) return [];
     
@@ -109,7 +109,6 @@ const Index = () => {
     }
   };
 
-  // Transform CuratedSubmission[] to CsvRow[] for the DownloadMenu
   const csvData = submissions?.map(submission => ({
     Project: submission.Project || '',
     Round: submission.Round || '',
@@ -141,7 +140,6 @@ const Index = () => {
     );
   }
 
-  // Check if all entries are processed
   const hasUnprocessedEntries = submissions?.some(
     (submission) => !submission.amount_raised && !submission.round_type
   );
@@ -230,6 +228,8 @@ const Index = () => {
             onAmountRangeChange={setAmountRange}
             roundType={roundType}
             onRoundTypeChange={setRoundType}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
           />
         </div>
         <ProjectGrid
