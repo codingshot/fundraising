@@ -35,9 +35,10 @@ Deno.serve(async (req) => {
     console.log(`Parsed ${rows.length} rows from CSV`);
 
     let processedCount = 0;
-    let skippedCount = 0;
-    let updatedCount = 0;
     let errorCount = 0;
+
+    // First, clear the temporary table
+    await supabase.from('temp_fundraises').delete().neq('Project', 'DUMMY_VALUE');
 
     for (const row of rows) {
       try {
@@ -57,61 +58,31 @@ Deno.serve(async (req) => {
           Social_Links
         ] = row;
 
-        // Check for existing entry
-        const { data: existing } = await supabase
-          .from('processed_fundraises')
-          .select('*')
-          .eq('Project', Project)
-          .eq('Date', Date)
-          .maybeSingle();
-
         // Convert Tags and Other_Investors from string to array
         const tagsArray = Tags ? Tags.split(',').map(t => t.trim()) : [];
         const otherInvestorsArray = Other_Investors ? Other_Investors.split(',').map(i => i.trim()) : [];
 
-        // Prepare data object
-        const fundraiseData = {
-          Project,
-          Round,
-          Website,
-          Date: Date ? new Date(Date).toISOString() : null,
-          Amount: Amount ? parseFloat(Amount.replace(/[^0-9.-]+/g, "")) : null,
-          Valuation: Valuation ? parseFloat(Valuation.replace(/[^0-9.-]+/g, "")) : null,
-          Category,
-          Tags: tagsArray,
-          Lead_Investors,
-          Other_Investors: otherInvestorsArray,
-          description: Description,
-          Announcement_Link,
-          Social_Links
-        };
+        // Insert into temporary table
+        const { error: insertError } = await supabase
+          .from('temp_fundraises')
+          .insert([{
+            Project,
+            Round,
+            Website,
+            Date: Date ? new Date(Date).toISOString() : null,
+            Amount: Amount ? parseFloat(Amount.replace(/[^0-9.-]+/g, "")) : null,
+            Valuation: Valuation ? parseFloat(Valuation.replace(/[^0-9.-]+/g, "")) : null,
+            Category,
+            Tags: tagsArray,
+            Lead_Investors,
+            Other_Investors: otherInvestorsArray,
+            Description,
+            Announcement_Link,
+            Social_Links
+          }]);
 
-        if (existing) {
-          // Compare data completeness
-          const existingNonNullFields = Object.values(existing).filter(v => v !== null && v !== undefined).length;
-          const newDataNonNullFields = Object.values(fundraiseData).filter(v => v !== null && v !== undefined).length;
-
-          if (newDataNonNullFields > existingNonNullFields) {
-            // Update if new data has more information
-            const { error: updateError } = await supabase
-              .from('processed_fundraises')
-              .update(fundraiseData)
-              .eq('id', existing.id);
-
-            if (updateError) throw updateError;
-            updatedCount++;
-          } else {
-            skippedCount++;
-          }
-        } else {
-          // Insert new entry
-          const { error: insertError } = await supabase
-            .from('processed_fundraises')
-            .insert([fundraiseData]);
-
-          if (insertError) throw insertError;
-          processedCount++;
-        }
+        if (insertError) throw insertError;
+        processedCount++;
 
       } catch (error) {
         console.error('Error processing row:', error);
@@ -119,13 +90,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // After all rows are inserted into temp table, run the migration function
+    const { error: migrationError } = await supabase.rpc('migrate_fundraises');
+    
+    if (migrationError) {
+      throw new Error(`Migration failed: ${migrationError.message}`);
+    }
+
     return new Response(
       JSON.stringify({
         status: 'success',
         processed: processedCount,
-        skipped: skippedCount,
-        updated: updatedCount,
-        errors: errorCount
+        errors: errorCount,
+        message: 'Data imported and migrated successfully'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -831,6 +831,57 @@ export type Database = {
         }
         Relationships: []
       }
+      temp_fundraises: {
+        Row: {
+          amount: number | null
+          announcement_link: string | null
+          category: string | null
+          date: string | null
+          description: string | null
+          lead_investors: string | null
+          other_investors: string[] | null
+          project: string | null
+          round: string | null
+          slug: string | null
+          social_links: string | null
+          tags: string[] | null
+          valuation: number | null
+          website: string | null
+        }
+        Insert: {
+          amount?: number | null
+          announcement_link?: string | null
+          category?: string | null
+          date?: string | null
+          description?: string | null
+          lead_investors?: string | null
+          other_investors?: string[] | null
+          project?: string | null
+          round?: string | null
+          slug?: string | null
+          social_links?: string | null
+          tags?: string[] | null
+          valuation?: number | null
+          website?: string | null
+        }
+        Update: {
+          amount?: number | null
+          announcement_link?: string | null
+          category?: string | null
+          date?: string | null
+          description?: string | null
+          lead_investors?: string | null
+          other_investors?: string[] | null
+          project?: string | null
+          round?: string | null
+          slug?: string | null
+          social_links?: string | null
+          tags?: string[] | null
+          valuation?: number | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -916,6 +967,10 @@ export type Database = {
           notification_ids: string[]
         }
         Returns: string[]
+      }
+      migrate_fundraises: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       slugify: {
         Args: {
