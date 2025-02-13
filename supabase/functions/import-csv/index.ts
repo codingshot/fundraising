@@ -32,15 +32,52 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to clear temporary table: ${clearError.message}`);
     }
 
+    // First check if the file exists in storage
+    console.log('Checking if CSV file exists...');
+    const { data: fileData, error: fileError } = await supabase
+      .storage
+      .from('public')
+      .list('', {
+        limit: 100,
+        search: 'cryptofundraises_cleaned.csv'
+      });
+
+    if (fileError) {
+      throw new Error(`Failed to check for CSV file: ${fileError.message}`);
+    }
+
+    if (!fileData || !fileData.length) {
+      throw new Error('CSV file not found in storage bucket');
+    }
+
     // Fetch CSV file from public URL
     console.log('Fetching CSV file...');
     const csvUrl = `${supabaseUrl}/storage/v1/object/public/public/cryptofundraises_cleaned.csv`;
-    const response = await fetch(csvUrl);
+    console.log('CSV URL:', csvUrl);
+    
+    const response = await fetch(csvUrl, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+      console.error('Failed to fetch CSV:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: csvUrl
+      });
+      throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
     }
 
     const csvText = await response.text();
+    console.log('CSV content preview:', csvText.substring(0, 200));
+    
+    if (!csvText || csvText.trim().length === 0) {
+      throw new Error('CSV file is empty');
+    }
+
     const rows = parse(csvText, { skipFirstRow: true });
     console.log(`Parsed ${rows.length} rows from CSV`);
 
@@ -153,7 +190,11 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         status: 'error', 
         message: error.message,
-        stack: error.stack 
+        stack: error.stack,
+        details: {
+          supabaseUrl: Deno.env.get('SUPABASE_URL'),
+          hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        }
       }),
       {
         status: 500,
