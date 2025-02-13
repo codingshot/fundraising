@@ -1,6 +1,5 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -12,31 +11,66 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { useState } from "react";
 
+interface CsvRow {
+  Project: string;
+  Round: string;
+  Website: string;
+  Date: string;
+  Amount: string;
+  Valuation: string;
+  Category: string;
+  Tags: string;
+  Lead_Investors: string;
+  Other_Investors: string;
+  Description: string;
+  Announcement_Link: string;
+  Social_Links: string;
+}
+
 const CsvDebug = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<string>("Date");
+  const [sortField, setSortField] = useState<keyof CsvRow>("Date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data: fundraises, isLoading, error, refetch } = useQuery({
-    queryKey: ["raw-fundraises"],
+  const { data: csvData, isLoading, error } = useQuery({
+    queryKey: ["csv-data"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('processed_fundraises')
-        .select('*')
-        .order(sortField, { ascending: sortDirection === "asc" });
+      const response = await fetch('/cryptofundraises_cleaned.csv');
+      const text = await response.text();
       
-      if (error) throw error;
-      return data;
+      // Parse CSV
+      const rows = text.split('\n').slice(1); // Skip header row
+      const parsedData: CsvRow[] = rows
+        .filter(row => row.trim()) // Skip empty rows
+        .map(row => {
+          const columns = row.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
+          return {
+            Project: columns[0] || '',
+            Round: columns[1] || '',
+            Website: columns[2] || '',
+            Date: columns[3] || '',
+            Amount: columns[4] || '',
+            Valuation: columns[5] || '',
+            Category: columns[6] || '',
+            Tags: columns[7] || '',
+            Lead_Investors: columns[8] || '',
+            Other_Investors: columns[9] || '',
+            Description: columns[10] || '',
+            Announcement_Link: columns[11] || '',
+            Social_Links: columns[12] || ''
+          };
+        });
+
+      return parsedData;
     }
   });
 
-  const handleSort = (field: string) => {
+  const handleSort = (field: keyof CsvRow) => {
     if (field === sortField) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -45,38 +79,14 @@ const CsvDebug = () => {
     }
   };
 
-  const handleImportCsv = async () => {
-    try {
-      const response = await fetch(
-        'https://zryhlwfkovkxtqiwzhai.supabase.co/functions/v1/import-csv',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Import result:', result);
-      refetch();
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-    }
-  };
-
   if (isLoading) {
-    return <div className="container p-8">Loading...</div>;
+    return <div className="container p-8">Loading CSV data...</div>;
   }
 
   if (error) {
     return (
       <div className="container p-8">
-        <h1 className="text-2xl font-bold text-red-500">Error loading data</h1>
+        <h1 className="text-2xl font-bold text-red-500">Error loading CSV data</h1>
         <pre className="mt-4 p-4 bg-red-50 rounded-lg overflow-auto">
           {JSON.stringify(error, null, 2)}
         </pre>
@@ -84,35 +94,53 @@ const CsvDebug = () => {
     );
   }
 
-  const filteredData = fundraises?.filter(item => {
+  const filteredData = csvData?.filter(item => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      item.Project?.toLowerCase().includes(searchLower) ||
-      item.name?.toLowerCase().includes(searchLower) ||
-      item.Lead_Investors?.toLowerCase().includes(searchLower) ||
-      item.description?.toLowerCase().includes(searchLower)
+      item.Project.toLowerCase().includes(searchLower) ||
+      item.Lead_Investors.toLowerCase().includes(searchLower) ||
+      item.Description.toLowerCase().includes(searchLower)
     );
   }) || [];
 
-  const paginatedData = filteredData.slice(
+  // Sort data
+  const sortedData = [...filteredData].sort((a, b) => {
+    const aValue = a[sortField] || '';
+    const bValue = b[sortField] || '';
+    
+    if (sortField === 'Amount' || sortField === 'Valuation') {
+      const aNum = parseFloat(aValue.replace(/[^0-9.-]+/g, "")) || 0;
+      const bNum = parseFloat(bValue.replace(/[^0-9.-]+/g, "")) || 0;
+      return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+    }
+    
+    if (sortField === 'Date') {
+      const aDate = new Date(aValue || '').getTime() || 0;
+      const bDate = new Date(bValue || '').getTime() || 0;
+      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+    }
+    
+    return sortDirection === 'asc' 
+      ? aValue.localeCompare(bValue)
+      : bValue.localeCompare(aValue);
+  });
+
+  const paginatedData = sortedData.slice(
     (page - 1) * itemsPerPage,
     page * itemsPerPage
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
   return (
     <div className="container p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">CSV Debug View</h1>
+          <h1 className="text-2xl font-bold">CSV Data View</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Total entries: {filteredData.length}
+            Total entries: {sortedData.length}
           </p>
         </div>
-        <Button onClick={handleImportCsv}>
-          Import CSV Data
-        </Button>
       </div>
 
       <div className="mb-4">
@@ -145,12 +173,12 @@ const CsvDebug = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.Project || item.name}</TableCell>
+            {paginatedData.map((item, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{item.Project}</TableCell>
                 <TableCell>{item.Round}</TableCell>
-                <TableCell>${item.Amount?.toLocaleString()}</TableCell>
-                <TableCell>{new Date(item.Date || item.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>{item.Amount}</TableCell>
+                <TableCell>{item.Date}</TableCell>
                 <TableCell>{item.Lead_Investors}</TableCell>
                 <TableCell>{item.Category}</TableCell>
               </TableRow>
@@ -160,31 +188,33 @@ const CsvDebug = () => {
       </div>
 
       <div className="flex items-center justify-between mt-4">
-        <Button
+        <button
+          className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
         >
           Previous
-        </Button>
+        </button>
         <span>
           Page {page} of {totalPages}
         </span>
-        <Button
+        <button
+          className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
           onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           disabled={page === totalPages}
         >
           Next
-        </Button>
+        </button>
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">Raw Data Preview</h2>
+        <h2 className="text-xl font-bold mb-4">Raw CSV Data Preview</h2>
         <ScrollArea className="h-[400px] rounded-md border">
           <div className="p-4">
-            {paginatedData.map((fundraise) => (
-              <Card key={fundraise.id} className="p-4 mb-4">
+            {paginatedData.map((row, index) => (
+              <Card key={index} className="p-4 mb-4">
                 <pre className="text-xs overflow-auto">
-                  {JSON.stringify(fundraise, null, 2)}
+                  {JSON.stringify(row, null, 2)}
                 </pre>
               </Card>
             ))}
