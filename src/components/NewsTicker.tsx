@@ -49,9 +49,10 @@ export const NewsTicker = () => {
       <div className="relative flex whitespace-nowrap">
         <div 
           ref={scrollRef}
-          className="animate-scroll inline-flex items-center gap-8 px-4"
+          className="animate-marquee inline-flex items-center gap-8 px-4"
           style={{
             willChange: 'transform',
+            animation: 'scroll 30s linear infinite',
           }}
         >
           {/* Duplicate items for seamless loop */}
@@ -78,6 +79,16 @@ export const NewsTicker = () => {
           ))}
         </div>
       </div>
+      <style jsx>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 };
