@@ -1,9 +1,9 @@
-
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectCardProps {
   submission: CuratedSubmission;
@@ -11,6 +11,8 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://platform.twitter.com/widgets.js";
@@ -21,6 +23,12 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
       document.body.removeChild(script);
     };
   }, []);
+
+  const handleCardClick = () => {
+    if (submission.slug) {
+      navigate(`/fundraise/${submission.slug}`);
+    }
+  };
 
   const renderCompactInfo = () => (
     <div className="grid grid-cols-5 gap-4 w-full text-sm">
@@ -111,7 +119,10 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
 
   if (viewMode === 'row') {
     return (
-      <div className="p-4 bg-card hover:bg-accent/50 transition-colors rounded-lg border">
+      <div 
+        className="p-4 bg-card hover:bg-accent/50 transition-colors rounded-lg border cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div className="flex items-center gap-4 mb-4">
           <div className="flex-shrink-0">
             {submission.tweet_data?.author_profile_image_url && (
@@ -149,7 +160,10 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
   }
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg">
+    <Card 
+      className="overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader className="flex flex-row items-center gap-4 p-4">
         {submission.tweet_data?.author_profile_image_url && (
           <img

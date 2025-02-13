@@ -509,6 +509,7 @@ export type Database = {
           ai_processing_attempts: number | null
           amount_raised: number | null
           announcement_username: string | null
+          company_id: string | null
           created_at: string
           description: string
           id: string
@@ -518,6 +519,7 @@ export type Database = {
           original_submission_id: string
           processed_at: string
           round_type: string | null
+          slug: string | null
           token: string | null
           tweet_timestamp: string | null
           twitter_url: string | null
@@ -527,6 +529,7 @@ export type Database = {
           ai_processing_attempts?: number | null
           amount_raised?: number | null
           announcement_username?: string | null
+          company_id?: string | null
           created_at?: string
           description: string
           id?: string
@@ -536,6 +539,7 @@ export type Database = {
           original_submission_id: string
           processed_at?: string
           round_type?: string | null
+          slug?: string | null
           token?: string | null
           tweet_timestamp?: string | null
           twitter_url?: string | null
@@ -545,6 +549,7 @@ export type Database = {
           ai_processing_attempts?: number | null
           amount_raised?: number | null
           announcement_username?: string | null
+          company_id?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -554,6 +559,7 @@ export type Database = {
           original_submission_id?: string
           processed_at?: string
           round_type?: string | null
+          slug?: string | null
           token?: string | null
           tweet_timestamp?: string | null
           twitter_url?: string | null
@@ -821,6 +827,13 @@ export type Database = {
           similarity: number
           reason: string
         }[]
+      }
+      generate_fundraise_slug: {
+        Args: {
+          name: string
+          announcement_date: string
+        }
+        Returns: string
       }
       get_follower_count: {
         Args: {
