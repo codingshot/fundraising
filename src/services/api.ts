@@ -95,24 +95,17 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
 
 export async function importCsvData() {
   try {
-    const response = await fetch(
-      'https://zryhlwfkovkxtqiwzhai.supabase.co/functions/v1/import-csv',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
+    console.log('Starting CSV import process...');
+    const response = await supabase.functions.invoke('import-csv', {
+      method: 'POST',
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.data) {
+      throw new Error('No response data from import function');
     }
 
-    const result = await response.json();
-    console.log('Import result:', result);
-    return result;
+    console.log('Import result:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Error importing CSV:', error);
     throw error;
