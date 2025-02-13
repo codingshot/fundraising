@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { DownloadMenu } from "@/components/DownloadMenu";
-import { format } from "date-fns";
+import { NewsTicker } from "@/components/NewsTicker";
 
 const Index = () => {
   const { toast } = useToast();
@@ -202,16 +202,19 @@ const Index = () => {
       </header>
 
       <main className="container py-6">
-        <FilterBar 
-          timeFilter={timeFilter} 
-          onTimeFilterChange={setTimeFilter}
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          amountRange={amountRange}
-          onAmountRangeChange={setAmountRange}
-          roundType={roundType}
-          onRoundTypeChange={setRoundType}
-        />
+        <NewsTicker />
+        <div className="mt-6">
+          <FilterBar 
+            timeFilter={timeFilter} 
+            onTimeFilterChange={setTimeFilter}
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+            amountRange={amountRange}
+            onAmountRangeChange={setAmountRange}
+            roundType={roundType}
+            onRoundTypeChange={setRoundType}
+          />
+        </div>
         <ProjectGrid
           submissions={submissions || []}
           isLoading={isLoading}
