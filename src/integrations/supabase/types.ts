@@ -1001,6 +1001,10 @@ export type Database = {
           tag: string
         }[]
       }
+      import_fundraises_directly: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       mark_notifications_as_read: {
         Args: {
           notification_ids: string[]
