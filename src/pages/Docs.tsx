@@ -6,14 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const ApiDocs = () => {
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold mb-8">API Documentation</h1>
+      <h1 className="text-4xl font-bold mb-8">Documentation</h1>
       
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="endpoints">Endpoints</TabsTrigger>
-          <TabsTrigger value="examples">Examples</TabsTrigger>
-          <TabsTrigger value="responses">Response Types</TabsTrigger>
+          <TabsTrigger value="endpoints">API Endpoints</TabsTrigger>
+          <TabsTrigger value="schema">Database Schema</TabsTrigger>
+          <TabsTrigger value="pipeline">Data Pipeline</TabsTrigger>
+          <TabsTrigger value="examples">Code Examples</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -21,12 +22,27 @@ const ApiDocs = () => {
             <CardHeader>
               <CardTitle>Overview</CardTitle>
               <CardDescription>
-                The Crypto Fundraising API provides access to cryptocurrency fundraising data.
+                CryptoFundraises collects and processes cryptocurrency fundraising data through multiple sources.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="mb-4">Base URL: <code className="bg-gray-100 p-1 rounded">/functions/v1/fundraising-api</code></p>
-              <p>All endpoints support CORS and return JSON responses.</p>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold mb-2">Data Sources</h3>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Twitter announcements and curated submissions</li>
+                  <li>Manual CSV imports for historical data</li>
+                  <li>Automated data processing pipeline</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Features</h3>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Real-time fundraising updates</li>
+                  <li>AI-powered data extraction</li>
+                  <li>REST API access</li>
+                  <li>CSV import/export capabilities</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -42,19 +58,6 @@ const ApiDocs = () => {
                 <pre className="bg-gray-100 p-4 rounded">
                   {`GET /all
 Response: Array<FundraisingData>`}
-                </pre>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>GET /download</CardTitle>
-                <CardDescription>Download complete dataset as JSON</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-gray-100 p-4 rounded">
-                  {`GET /download
-Response: JSON file download`}
                 </pre>
               </CardContent>
             </Card>
@@ -108,6 +111,100 @@ Response: {
           </div>
         </TabsContent>
 
+        <TabsContent value="schema">
+          <Card>
+            <CardHeader>
+              <CardTitle>Database Schema</CardTitle>
+              <CardDescription>Core tables and their relationships</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">processed_fundraises</h3>
+                <p className="text-sm text-muted-foreground mb-2">Main table storing processed fundraising data</p>
+                <pre className="bg-gray-100 p-4 rounded text-sm">
+                  {`Table: processed_fundraises
+- id: uuid (Primary Key)
+- name: text (Project/Company name)
+- description: text
+- amount_raised: numeric
+- investors: text[]
+- token: text
+- lead_investor: text
+- round_type: text
+- twitter_url: text
+- announcement_username: text
+- tweet_timestamp: timestamptz
+- processed_at: timestamptz
+- slug: text (Unique identifier)
+- Tags: text[]
+- Website: text
+- Date: timestamptz
+- Category: text`}
+                </pre>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">temp_fundraises</h3>
+                <p className="text-sm text-muted-foreground mb-2">Temporary table for CSV imports and data processing</p>
+                <pre className="bg-gray-100 p-4 rounded text-sm">
+                  {`Table: temp_fundraises
+- Similar structure to processed_fundraises
+- Used as staging area for data imports
+- Data is validated and cleaned before moving to processed_fundraises`}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pipeline">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Pipeline</CardTitle>
+              <CardDescription>How data flows through the system</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-2">1. Data Ingestion</h3>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Automated Twitter feed monitoring</li>
+                  <li>CSV file imports for batch processing</li>
+                  <li>Manual submissions through API</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">2. Processing Pipeline</h3>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>AI-powered data extraction using GPT-4</li>
+                  <li>Data normalization and validation</li>
+                  <li>Duplicate detection</li>
+                  <li>Slug generation for unique identification</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">3. Storage and Indexing</h3>
+                <ul className="list-disc pl-6 space-y-2">
+                  <li>Processed data stored in main database</li>
+                  <li>Automatic indexing for efficient querying</li>
+                  <li>Regular database maintenance and optimization</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Edge Functions</h3>
+                <pre className="bg-gray-100 p-4 rounded text-sm">
+                  {`- scheduled-fetch: Runs every hour to fetch new submissions
+- import-csv: Handles CSV file imports
+- process-fundraising: AI-powered data extraction
+- direct-import: Manual data imports via API`}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="examples">
           <Card>
             <CardHeader>
@@ -128,11 +225,7 @@ const data = await response.json();
 const searchResponse = await fetch(
   'https://zryhlwfkovkxtqiwzhai.functions.supabase.co/fundraising-api/search?token=ETH&round=seed'
 );
-const searchResults = await searchResponse.json();
-
-// Download data
-window.location.href = 
-  'https://zryhlwfkovkxtqiwzhai.functions.supabase.co/fundraising-api/download';`}
+const searchResults = await searchResponse.json();`}
                   </pre>
                 </div>
 
@@ -155,48 +248,6 @@ stats = requests.get(
                   </pre>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="responses">
-          <Card>
-            <CardHeader>
-              <CardTitle>Response Types</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="bg-gray-100 p-4 rounded">
-                {`// Fundraising Data Type
-interface FundraisingData {
-  id: string;
-  original_submission_id: string;
-  name: string;
-  description: string;
-  amount_raised: number | null;
-  investors: string[];
-  token: string | null;
-  lead_investor: string | null;
-  round_type: string | null;
-  twitter_url: string | null;
-  announcement_username: string | null;
-  tweet_timestamp: string | null;
-  processed_at: string;
-}
-
-// Stats Response Type
-interface StatsResponse {
-  total_raises: number;
-  total_amount: number;
-  by_round: {
-    [roundType: string]: number;
-  };
-}
-
-// Error Response Type
-interface ErrorResponse {
-  error: string;
-}`}
-              </pre>
             </CardContent>
           </Card>
         </TabsContent>
