@@ -10,9 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { ArrowUpDown } from "lucide-react";
 import { useState } from "react";
+import { FilterBar } from "@/components/FilterBar";
+import { DownloadMenu } from "@/components/DownloadMenu";
+import { subDays } from "date-fns";
 
 interface CsvRow {
   Project: string;
@@ -35,6 +37,9 @@ const CsvDebug = () => {
   const [sortField, setSortField] = useState<keyof CsvRow>("Date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [amountRange, setAmountRange] = useState<[number, number]>([0, 100000000]);
+  const [roundType, setRoundType] = useState("all");
   const itemsPerPage = 10;
 
   const { data: csvData, isLoading, error } = useQuery({
@@ -96,11 +101,32 @@ const CsvDebug = () => {
 
   const filteredData = csvData?.filter(item => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = 
       item.Project.toLowerCase().includes(searchLower) ||
       item.Lead_Investors.toLowerCase().includes(searchLower) ||
-      item.Description.toLowerCase().includes(searchLower)
-    );
+      item.Description.toLowerCase().includes(searchLower);
+
+    // Time filter
+    const itemDate = new Date(item.Date);
+    const now = new Date();
+    let matchesTime = true;
+    if (timeFilter === "day") {
+      matchesTime = itemDate >= subDays(now, 1);
+    } else if (timeFilter === "week") {
+      matchesTime = itemDate >= subDays(now, 7);
+    } else if (timeFilter === "month") {
+      matchesTime = itemDate >= subDays(now, 30);
+    }
+
+    // Amount filter
+    const amount = parseFloat(item.Amount.replace(/[^0-9.-]+/g, "")) || 0;
+    const matchesAmount = amount >= amountRange[0] && amount <= amountRange[1];
+
+    // Round type filter
+    const matchesRound = roundType === "all" || 
+      item.Round.toLowerCase() === roundType.toLowerCase();
+
+    return matchesSearch && matchesTime && matchesAmount && matchesRound;
   }) || [];
 
   // Sort data
@@ -141,14 +167,19 @@ const CsvDebug = () => {
             Total entries: {sortedData.length}
           </p>
         </div>
+        <DownloadMenu data={sortedData} />
       </div>
 
-      <div className="mb-4">
-        <Input
-          placeholder="Search projects, investors..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+      <div className="mb-6">
+        <FilterBar
+          timeFilter={timeFilter}
+          onTimeFilterChange={setTimeFilter}
+          onSearchChange={setSearchTerm}
+          onAmountRangeChange={setAmountRange}
+          onRoundTypeChange={setRoundType}
+          searchValue={searchTerm}
+          amountRange={amountRange}
+          roundType={roundType}
         />
       </div>
 
