@@ -1,4 +1,3 @@
-
 import { CuratedSubmission } from "../types/project";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,6 +72,32 @@ export async function fetchCuratedSubmissions(): Promise<CuratedSubmission[]> {
     return transformedData;
   } catch (error) {
     console.error("Error fetching submissions:", error);
+    throw error;
+  }
+}
+
+export async function importCsvData() {
+  try {
+    const response = await fetch(
+      'https://zryhlwfkovkxtqiwzhai.supabase.co/functions/v1/import-csv',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Import result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error importing CSV:', error);
     throw error;
   }
 }
