@@ -841,7 +841,6 @@ export type Database = {
           announcement_username: string | null
           category: string | null
           company_id: string | null
-          created_at: string | null
           date: string | null
           description: string | null
           description_processed: string | null
@@ -873,7 +872,6 @@ export type Database = {
           announcement_username?: string | null
           category?: string | null
           company_id?: string | null
-          created_at?: string | null
           date?: string | null
           description?: string | null
           description_processed?: string | null
@@ -905,7 +903,6 @@ export type Database = {
           announcement_username?: string | null
           category?: string | null
           company_id?: string | null
-          created_at?: string | null
           date?: string | null
           description?: string | null
           description_processed?: string | null

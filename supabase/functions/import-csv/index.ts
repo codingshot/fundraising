@@ -23,19 +23,15 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // First get existing data to preserve information
-    const { data: existingData, error: fetchError } = await supabase
-      .from('processed_fundraises')
-      .select('*');
+    // First clear the temporary table
+    const { error: clearError } = await supabase
+      .from('temp_fundraises')
+      .delete()
+      .neq('Project', 'DUMMY_VALUE');
 
-    if (fetchError) {
-      throw new Error(`Failed to fetch existing data: ${fetchError.message}`);
+    if (clearError) {
+      throw new Error(`Failed to clear temporary table: ${clearError.message}`);
     }
-
-    // Create a map of existing data by Project name for quick lookup
-    const existingDataMap = new Map(
-      existingData?.map(item => [item.Project?.toLowerCase(), item]) || []
-    );
 
     // Fetch CSV file from public URL
     const csvUrl = `${supabaseUrl}/storage/v1/object/public/public/cryptofundraises_cleaned.csv`;
@@ -51,11 +47,11 @@ Deno.serve(async (req) => {
     let processedCount = 0;
     let errorCount = 0;
 
-    // First, clear the temporary table
-    await supabase.from('temp_fundraises').delete().neq('Project', 'DUMMY_VALUE');
-
-    for (const row of rows) {
-      try {
+    // Process rows in batches of 1000
+    const batchSize = 1000;
+    for (let i = 0; i < rows.length; i += batchSize) {
+      const batch = rows.slice(i, i + batchSize);
+      const batchData = batch.map(row => {
         const [
           Project,
           Round,
@@ -72,61 +68,60 @@ Deno.serve(async (req) => {
           Social_Links
         ] = row;
 
-        // Convert Tags and Other_Investors from string to array
-        const tagsArray = Tags ? Tags.split(',').map(t => t.trim()) : [];
-        const otherInvestorsArray = Other_Investors ? Other_Investors.split(',').map(i => i.trim()) : [];
+        // Generate a predictable slug from Project name and date
+        const date = new Date(Date);
+        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const baseSlug = (Project || 'unknown-project')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        const slug = `${baseSlug}-${yearMonth}`;
 
-        // Look for existing data
-        const existingEntry = existingDataMap.get(Project?.toLowerCase());
+        return {
+          Project,
+          Round,
+          Website,
+          Date: Date ? new Date(Date).toISOString() : null,
+          Amount: Amount ? parseFloat(Amount.replace(/[^0-9.-]+/g, "")) : null,
+          Valuation: Valuation ? parseFloat(Valuation.replace(/[^0-9.-]+/g, "")) : null,
+          Category,
+          Tags: Tags ? Tags.split(',').map(t => t.trim()) : [],
+          Lead_Investors,
+          Other_Investors: Other_Investors ? Other_Investors.split(',').map(i => i.trim()) : [],
+          Description,
+          Announcement_Link,
+          Social_Links,
+          slug
+        };
+      });
 
-        // Insert into temporary table
-        const { error: insertError } = await supabase
-          .from('temp_fundraises')
-          .insert([{
-            Project,
-            Round,
-            Website,
-            Date: Date ? new Date(Date).toISOString() : null,
-            Amount: Amount ? parseFloat(Amount.replace(/[^0-9.-]+/g, "")) : null,
-            Valuation: Valuation ? parseFloat(Valuation.replace(/[^0-9.-]+/g, "")) : null,
-            Category,
-            Tags: tagsArray,
-            Lead_Investors,
-            Other_Investors: otherInvestorsArray,
-            Description,
-            Announcement_Link,
-            Social_Links,
-            // Preserve existing data if available
-            amount_raised: existingEntry?.amount_raised || null,
-            investors: existingEntry?.investors || otherInvestorsArray,
-            token: existingEntry?.token || null,
-            twitter_url: existingEntry?.twitter_url || null,
-            announcement_username: existingEntry?.announcement_username || null,
-            original_submission_id: existingEntry?.original_submission_id || null,
-            round_type: existingEntry?.round_type || Round,
-            lead_investor: existingEntry?.lead_investor || Lead_Investors,
-            tweet_timestamp: existingEntry?.tweet_timestamp || null,
-            ai_processed: existingEntry?.ai_processed || false,
-            ai_processing_attempts: existingEntry?.ai_processing_attempts || 0,
-            name: existingEntry?.name || Project,
-            company_id: existingEntry?.company_id || null,
-            description_processed: existingEntry?.description || Description
-          }]);
+      const { error: insertError } = await supabase
+        .from('temp_fundraises')
+        .insert(batchData);
 
-        if (insertError) throw insertError;
-        processedCount++;
-
-      } catch (error) {
-        console.error('Error processing row:', error);
-        errorCount++;
+      if (insertError) {
+        console.error('Error processing batch:', insertError);
+        errorCount += batch.length;
+      } else {
+        processedCount += batch.length;
+        console.log(`Processed ${processedCount} rows so far`);
       }
     }
 
-    // After all rows are inserted into temp table, run the migration function
+    // After all data is in temp table, run the migration function
     const { error: migrationError } = await supabase.rpc('migrate_fundraises');
     
     if (migrationError) {
       throw new Error(`Migration failed: ${migrationError.message}`);
+    }
+
+    // Get the total count of records in processed_fundraises
+    const { count, error: countError } = await supabase
+      .from('processed_fundraises')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      throw new Error(`Failed to get count: ${countError.message}`);
     }
 
     return new Response(
@@ -134,7 +129,8 @@ Deno.serve(async (req) => {
         status: 'success',
         processed: processedCount,
         errors: errorCount,
-        message: 'Data imported and migrated successfully'
+        total_records: count,
+        message: `Successfully imported ${processedCount} records. Total records in database: ${count}`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -144,7 +140,11 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Fatal error:', error);
     return new Response(
-      JSON.stringify({ status: 'error', message: error.message }),
+      JSON.stringify({ 
+        status: 'error', 
+        message: error.message,
+        stack: error.stack 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
