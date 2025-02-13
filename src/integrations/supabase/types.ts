@@ -1023,6 +1023,10 @@ export type Database = {
         }
         Returns: string
       }
+      truncate_temp_fundraises: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       citizenship_status: "american_born" | "naturalized_citizen"
