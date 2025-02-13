@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { DownloadMenu } from "@/components/DownloadMenu";
 
 const Index = () => {
   const { toast } = useToast();
@@ -109,18 +110,25 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container py-6">
-          <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
-          <p className="mt-2 text-muted-foreground">
-            A feed of all the latest crypto fundraising announcements.{" "}
-            <a
-              href="https://t.me/cryptofundraises"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Telegram feed
-            </a>
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-semibold">Crypto Fundraises</h1>
+              <p className="mt-2 text-muted-foreground">
+                A feed of all the latest crypto fundraising announcements.{" "}
+                <a
+                  href="https://t.me/cryptofundraises"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Telegram feed
+                </a>
+              </p>
+            </div>
+            {submissions && submissions.length > 0 && (
+              <DownloadMenu submissions={submissions} />
+            )}
+          </div>
           <div className="flex gap-4 mt-4">
             <button
               onClick={handleFetchData}
