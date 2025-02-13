@@ -23,10 +23,8 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // First clear the temporary table
-    const { error: clearError } = await supabase
-      .from('temp_fundraises')
-      .delete();
+    // First clear the temporary table using TRUNCATE via RPC
+    const { error: clearError } = await supabase.rpc('truncate_temp_fundraises');
 
     if (clearError) {
       throw new Error(`Failed to clear temporary table: ${clearError.message}`);
