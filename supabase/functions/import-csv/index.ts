@@ -26,8 +26,7 @@ Deno.serve(async (req) => {
     // First clear the temporary table
     const { error: clearError } = await supabase
       .from('temp_fundraises')
-      .delete()
-      .neq('Project', 'DUMMY_VALUE');
+      .delete();
 
     if (clearError) {
       throw new Error(`Failed to clear temporary table: ${clearError.message}`);
