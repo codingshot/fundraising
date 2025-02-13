@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Telegram } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 export const NavigationMenu = () => {
   const location = useLocation();
@@ -42,7 +42,7 @@ export const NavigationMenu = () => {
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
-            <Telegram className="h-5 w-5" />
+            <MessageCircle className="h-5 w-5" />
           </a>
         </div>
       </div>
