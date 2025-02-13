@@ -66,7 +66,7 @@ export const NewsTicker = () => {
                     {fundraise.Round || 'Seed'}
                   </span>
                   <span className="text-emerald-500 font-semibold whitespace-nowrap">
-                    ${fundraise.Amount?.toLocaleString() || 'Undisclosed'}
+                    ${(fundraise.amount_raised || fundraise.Amount)?.toLocaleString() || 'Undisclosed'}
                   </span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}
