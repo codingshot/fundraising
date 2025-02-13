@@ -26,11 +26,13 @@ export type Database = {
           lead_investor: string | null
           logo: string | null
           name: string
+          original_submission_id: string
           processed_at: string | null
           round_type: string | null
           token: string | null
-          tweet_url: string | null
+          tweet_timestamp: string | null
           twitter: string | null
+          twitter_url: string | null
           updated_at: string
           website: string | null
         }
@@ -50,11 +52,13 @@ export type Database = {
           lead_investor?: string | null
           logo?: string | null
           name: string
+          original_submission_id: string
           processed_at?: string | null
           round_type?: string | null
           token?: string | null
-          tweet_url?: string | null
+          tweet_timestamp?: string | null
           twitter?: string | null
+          twitter_url?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -74,11 +78,13 @@ export type Database = {
           lead_investor?: string | null
           logo?: string | null
           name?: string
+          original_submission_id?: string
           processed_at?: string | null
           round_type?: string | null
           token?: string | null
-          tweet_url?: string | null
+          tweet_timestamp?: string | null
           twitter?: string | null
+          twitter_url?: string | null
           updated_at?: string
           website?: string | null
         }
