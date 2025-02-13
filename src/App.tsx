@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ApiDocs from "./pages/Docs";
 import DataPage from "./pages/Data";
+import FundraiseDetails from "./pages/FundraiseDetails";
 import Footer from "./components/Footer";
 import { NavigationMenu } from "./components/NavigationMenu";
 
@@ -26,7 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/docs" element={<ApiDocs />} />
               <Route path="/data" element={<DataPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/fundraise/:slug" element={<FundraiseDetails />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
