@@ -1,3 +1,4 @@
+
 import { CuratedSubmission } from "@/types/project";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Twitter, DollarSign, Building2, Briefcase, Users } from "lucide-react";
@@ -127,9 +128,14 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
                 {submission.tweet_data?.author_name || 'Unknown Author'}
               </h3>
               {submission.tweet_data?.author_username && (
-                <span className="text-sm text-muted-foreground">
+                <a
+                  href={`https://x.com/${submission.tweet_data.author_username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   @{submission.tweet_data.author_username}
-                </span>
+                </a>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
@@ -153,14 +159,21 @@ export const ProjectCard = ({ submission, viewMode }: ProjectCardProps) => {
           />
         )}
         <div className="flex-1">
-          <h3 className="text-lg font-semibold">
-            {submission.tweet_data?.author_name || 'Unknown Author'}
-          </h3>
-          {submission.tweet_data?.author_username && (
-            <span className="text-sm text-muted-foreground">
-              @{submission.tweet_data.author_username}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">
+              {submission.tweet_data?.author_name || 'Unknown Author'}
+            </h3>
+            {submission.tweet_data?.author_username && (
+              <a
+                href={`https://x.com/${submission.tweet_data.author_username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary"
+              >
+                @{submission.tweet_data.author_username}
+              </a>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0">
