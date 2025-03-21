@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      change_log: {
+        Row: {
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp: string
+        }
+        Insert: {
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          timestamp?: string
+        }
+        Update: {
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       crypto_fundraising: {
         Row: {
           ai_generated_summary: string | null
@@ -1047,6 +1101,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      is_admin: {
+        Args: {
+          uid?: string
+        }
+        Returns: boolean
+      }
       mark_notifications_as_read: {
         Args: {
           notification_ids: string[]
@@ -1065,6 +1125,15 @@ export type Database = {
       }
       process_csv_fundraises: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      restore_change: {
+        Args: {
+          p_operation: string
+          p_table_name: string
+          p_record_id: string
+          p_old_data?: Json
+        }
         Returns: undefined
       }
       slugify: {

@@ -126,7 +126,7 @@ export const NewsTicker = () => {
                     </span>
                     
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(fundraise.Date || fundraise.created_at).toLocaleDateString()}
+                      {new Date(fundraise.Date || fundraise.processed_at).toLocaleDateString()}
                     </span>
                     
                     <ArrowRight className="h-4 w-4 text-primary shrink-0" />
